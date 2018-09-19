@@ -1,0 +1,51 @@
+<html>
+<head>
+  <title>Test</title>
+</head>
+<body>
+  <script src="js/filepuller.min.js"></script>
+  <script src="../dist/swcmorphologyparser.js"></script>
+
+  <!-- The minified version is also accessible -->
+  <!-- <script src="../dist/es6module.umd.min.js"></script> -->
+
+  Open SWC morphology file file <input type="file" id="fileInput" multiple>
+
+  <script>
+    let fileInput = document.getElementById('fileInput')
+
+    // manages file input
+    fileInput.addEventListener('change', function(e) {
+      let files = e.target.files
+
+      if( !files.length ){
+        return;
+      }
+
+
+      for(let i=0; i<files.length; i++){
+        filepuller.read( files[i], true, function(error, data){
+          if (error) {
+            console.warn("ERROR" + error)
+            return
+          }
+          readSwcFile(data)
+        })
+      }
+    })
+
+
+    function readSwcFile (data) {
+      console.log(data)
+
+      let swcParser = new swcmorphologyparser.SwcParser()
+      swcParser.parse(data)
+    }
+
+
+
+
+  </script>
+
+</body>
+</html>

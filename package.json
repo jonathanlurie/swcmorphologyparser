@@ -1,0 +1,35 @@
+{
+  "name": "swcmorphologyparser",
+  "version": "0.1.0",
+  "description": "A Javascript SWC file parser for neuron morphology",
+  "repository": "jonathanlurie/swcmorphologyparser",
+  "moduleName": "swcmorphologyparser",
+  "entry": "src/main.js",
+  "main": "dist/swcmorphologyparser.js",
+  "min": "dist/swcmorphologyparser.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup -c",
+    "dev": "serve -l 5002 . & rollup -w -c rollup.config.dev.js",
+    "serve": "serve -l 5002 .",
+    "doc": "documentation build src/main.js -o ./doc/ -f html; documentation build src/** -f md > documentation.md",
+    "lintfix": "standard --fix src/**/*.js",
+    "lint": "standard src/**/*.js"
+  },
+  "author": "Jonathan Lurie",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.0.1",
+    "@babel/preset-env": "^7.0.0",
+    "documentation": "^8.1.2",
+    "rollup": "^0.65.2",
+    "rollup-plugin-babel": "^4.0.3",
+    "rollup-plugin-commonjs": "^9.1.6",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-resolve": "^3.4.0",
+    "rollup-plugin-uglify": "^5.0.2",
+    "serve": "^10.0.1",
+    "standard": "^12.0.1"
+  }
+}
