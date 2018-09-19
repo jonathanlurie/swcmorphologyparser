@@ -5,6 +5,18 @@
 }(this, (function (exports) { 'use strict';
 
   /**
+   * Defines the SWC standard types as in http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
+   */
+  const SWC_TYPES = {
+    UNDEFINED: 0,
+    SOMA: 1,
+    AXON: 2,
+    BASAL_DENDRITE: 3,
+    APICAL_DENDRITE: 4,
+    CUSTOM: 5
+  };
+
+  /**
    * A TreeNode instance represent a point from the SWC file. It has a 3D coordinate,
    * an ID, a type, a radius, a reference to a parent (which is also a TreeNode
    * instance) and a list of children (also TreeNode instances).
@@ -30,6 +42,8 @@
 
       this._parent = null;
       this._children = [];
+
+      this._hasSomaChildren = false;
     }
 
 
@@ -50,6 +64,13 @@
       return this._type
     }
 
+
+    /**
+     * @return {Boolean} true if this node is a soma, false if not
+     */
+    isSoma () {
+      return (this._type === SWC_TYPES.SOMA)
+    }
 
     /**
      * Get teh radius of _this_ node
@@ -94,6 +115,8 @@
     _addChild (cNode) {
       if (!this.doesAlreadyHaveChild(cNode)) {
         this._children.push(cNode);
+
+        this._hasSomaChildren = cNode.isSoma() || this._hasSomaChildren;
       }
     }
 
@@ -108,6 +131,26 @@
 
 
     /**
+     * Get all the children that are not soma points.
+     * @return {Array} array of TreeNode instances
+     */
+    getNonSomaChildren () {
+      if (!this._hasSomaChildren) {
+        return this._children
+      }
+
+      let nonSomaChildren = [];
+
+      for (let i=0; i<this._children.length; i++) {
+        if (!this._children[i].isSoma()) {
+          nonSomaChildren.push(this._children[i]);
+        }
+      }
+      return nonSomaChildren
+    }
+
+
+    /**
      * Check is _this_ node already has the given child amond its list of children
      * @param {TreeNode} cNode - some node to test, most likely a potential child
      * @return {Boolean} true if this child is already present, false if not
@@ -118,6 +161,34 @@
           return true
       }
       return false
+    }
+
+
+    /**
+     * Dive into the TreeNode connection by following the children. Builds a list
+     * all along. Stops when a node has no more children (end of branch) or when a
+     * node has two children or more because it means it's a forking point.
+     * What is returned in the end is an array that can be empty (if end of branch)
+     * or with two or more TreeNode instance being the forking direction
+     * @param {Array} nodeList - contains the previous TreeNode (parent, grand parents, etc.)
+     * this array is only pushed to, nothing is taken or read from it.
+     * @return {Array} of TreeNodes that are forking direction.
+     */
+    dive (nodeList) {
+      // adding the current node on the list
+      nodeList.push(this);
+
+      let children = this.getNonSomaChildren();
+
+      // this current node is in the middle of a sections, we go on...
+      if (children.length === 1) {
+        return children[0].dive()
+
+      // this is or a ending point (no children) or a forking point (2 children or more).
+      // In both case, this the end of a sections
+      } else {
+        return children
+      }
     }
 
   }
@@ -143,8 +214,8 @@
      */
     constructor (points) {
       this._nodes = {};
-
       this._initCollection(points);
+      this._buildSections();
     }
 
 
@@ -153,6 +224,8 @@
      * Makes the list of nodes
      */
     _initCollection (points) {
+      let somaNodes = [];
+
       for (let i=0; i<points.length; i++) {
         let aNode = new TreeNode(
           points[i][0], // id
@@ -164,6 +237,12 @@
         );
 
         this._nodes[points[i][0]] = aNode;
+
+        // The soma nodes: in addition to put them in the regular collection,
+        // we also put them in a small collection we keep on the side
+        if (points[i][1] === SWC_TYPES.SOMA) {
+          somaNodes.push(aNode);
+        }
 
         // In the SWC, a node/point seems to be always described after its parent,
         // so we can makes the parent/children links in the same loop
@@ -177,7 +256,37 @@
         aNode.setParent( theParentNode );
       }
 
+      console.log(somaNodes);
       console.log(this._nodes);
+    }
+
+
+    _buildSections () {
+
+      // find the first point that has non-soma children:
+      let currentNode = null;
+      for (let nodeId in this._nodes) {
+        let currentPointChildren = this._nodes[nodeId].getNonSomaChildren();
+        if (currentPointChildren.length > 0) {
+          currentNode = this._nodes[nodeId];
+          break
+        }
+      }
+
+      if (!currentNode ) {
+        console.warn("No valid section here");
+        return
+      }
+
+
+      let branch = [];
+      branch.push(currentNode);
+      let nexNodes = currentNode.dive(branch);
+
+
+      //sections[currentSectionId] = new Section(currentSectionId)
+
+
     }
 
 
@@ -239,7 +348,7 @@
         }
       }
 
-      console.log(swcPoints);
+      //console.log(swcPoints)
       return swcPoints
     }
 

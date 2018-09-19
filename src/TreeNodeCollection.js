@@ -1,4 +1,5 @@
-import { TreeNode } from './TreeNode.js'
+import { TreeNode } from "./TreeNode.js"
+import { SWC_TYPES } from "./Constants.js"
 
 
 /**
@@ -22,8 +23,8 @@ class TreeNodeCollection {
    */
   constructor (points) {
     this._nodes = {}
-
     this._initCollection(points)
+    this._buildSections()
   }
 
 
@@ -32,6 +33,8 @@ class TreeNodeCollection {
    * Makes the list of nodes
    */
   _initCollection (points) {
+    let somaNodes = []
+
     for (let i=0; i<points.length; i++) {
       let aNode = new TreeNode(
         points[i][0], // id
@@ -43,6 +46,12 @@ class TreeNodeCollection {
       )
 
       this._nodes[points[i][0]] = aNode
+
+      // The soma nodes: in addition to put them in the regular collection,
+      // we also put them in a small collection we keep on the side
+      if (points[i][1] === SWC_TYPES.SOMA) {
+        somaNodes.push(aNode)
+      }
 
       // In the SWC, a node/point seems to be always described after its parent,
       // so we can makes the parent/children links in the same loop
@@ -56,7 +65,39 @@ class TreeNodeCollection {
       aNode.setParent( theParentNode )
     }
 
+    console.log(somaNodes)
     console.log(this._nodes)
+  }
+
+
+  _buildSections () {
+    let currentSectionId = 0
+    let sections = {}
+
+    // find the first point that has non-soma children:
+    let currentNode = null
+    for (let nodeId in this._nodes) {
+      let currentPointChildren = this._nodes[nodeId].getNonSomaChildren()
+      if (currentPointChildren.length > 0) {
+        currentNode = this._nodes[nodeId]
+        break
+      }
+    }
+
+    if (!currentNode ) {
+      console.warn("No valid section here")
+      return
+    }
+
+
+    let branch = []
+    branch.push(currentNode)
+    let nexNodes = currentNode.dive(branch)
+
+
+    //sections[currentSectionId] = new Section(currentSectionId)
+
+
   }
 
 

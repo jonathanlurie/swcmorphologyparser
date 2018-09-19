@@ -57,7 +57,7 @@ class SwcParser {
       }
     }
 
-    console.log(swcPoints)
+    //console.log(swcPoints)
     return swcPoints
   }
 
