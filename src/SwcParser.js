@@ -4,13 +4,38 @@ import { TreeNodeCollection } from './TreeNodeCollection.js'
 class SwcParser {
 
   constructor () {
-
+    this._morphology = null
+    this._rawMorphology = null
   }
 
 
   parse (swcStr) {
+    this._morphology = null
+    this._rawMorphology = null
     let rawPoints = this._extractPoints(swcStr)
     let treeNodeCollection = new TreeNodeCollection(rawPoints)
+    this._morphology = treeNodeCollection.getMorphology()
+    this._rawMorphology = treeNodeCollection.getRawMorphology()
+  }
+
+
+  /**
+   * Get the raw morphology flat tree
+   * @return {Object} the soma and all the sections at the same level.
+   * Still, all the info about parent/children are present
+   */
+  getRawMorphology () {
+    return this._rawMorphology
+  }
+
+
+  /**
+   * Get the morphology object, which is much easier to query than the raw morphology
+   * @return {morphologycorejs.Morphology}
+   *
+   */
+  getMorphology () {
+    return this._morphology
   }
 
 
@@ -57,7 +82,6 @@ class SwcParser {
       }
     }
 
-    //console.log(swcPoints)
     return swcPoints
   }
 

@@ -7,11 +7,24 @@
       top: 0;
       left: 0;
     }
+
+    body {
+      margin: 0
+    }
+
+    #threedeediv {
+      width: 100vw;
+      height: 100vh;
+    }
   </style>
 </head>
 <body>
   <script src="js/filepuller.min.js"></script>
   <script src="../dist/swcmorphologyparser.js"></script>
+
+  <script src="js/morphoviewer.js"></script>
+
+  <div id="threedeediv"></div>
 
   <!-- The minified version is also accessible -->
   <!-- <script src="../dist/es6module.umd.min.js"></script> -->
@@ -20,12 +33,13 @@
     Open SWC morphology file file <input type="file" id="fileInput" multiple>
   </div>
 
-  <textarea id="textdisplay" rows="100" cols="80">
-  </textarea>
-
   <script>
     let fileInput = document.getElementById('fileInput')
-    let textdisplay = document.getElementById('textdisplay')
+
+
+    // init the morpho viewer
+    let threedeediv = document.getElementById( 'threedeediv' )
+    let morphoViewer = new morphoviewer.MorphoViewer(threedeediv)
 
     // manages file input
     fileInput.addEventListener('change', function(e) {
@@ -62,7 +76,18 @@
       console.log(morpho)
 
       if (rawMorpho) {
-        textdisplay.value = JSON.stringify(rawMorpho, null, 2)
+        // we display a morpho, second param is it's name (null: a autogenarated will do)
+        // last param is "do we focus the camera on it"
+        morphoViewer.addMorphology (
+          morpho,
+          {
+            focusOn: true, // do we want the camera to focus on this one when it's loaded?
+            asPolyline: true, // with polylines of with cylinders?
+            onDone: null, // what to do when it's loaded?
+            //color: Math.floor(Math.random() * 0xFFFFFF), // if not present, all neurones will have there axon in blue, basal dendrite in red and apical dendrite in green
+            somaMode: "fromOrphanSections",
+          }
+        )
       } else {
         alert("This file does not contain a valid morphology")
       }

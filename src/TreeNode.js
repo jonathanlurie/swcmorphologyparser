@@ -167,7 +167,13 @@ class TreeNode {
 
     // this current node is in the middle of a sections, we go on...
     if (children.length === 1) {
-      return children[0].dive()
+
+      if (children[0].getType() === this._type) {
+        return children[0].dive(nodeList)
+      } else {
+        console.warn(`Non-soma node (id:${this._id} type:${this._type}) has a single child of different type (id:${children[0].getId()} type:${this.getType()})`)
+      }
+
 
     // this is or a ending point (no children) or a forking point (2 children or more).
     // In both case, this the end of a sections
