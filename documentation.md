@@ -2,42 +2,230 @@
 
 ### Table of Contents
 
--   [Foo][1]
-    -   [setAnAttribute][2]
-    -   [printAnAttribute][3]
-    -   [getAnAttribute][4]
+-   [SWC_TYPES][1]
+-   [getRawMorphology][2]
+-   [getMorphology][3]
+-   [TreeNode][4]
+    -   [Parameters][5]
+    -   [getId][6]
+    -   [getType][7]
+    -   [isSoma][8]
+    -   [getRadius][9]
+    -   [getPosition][10]
+    -   [setParent][11]
+        -   [Parameters][12]
+    -   [getParent][13]
+    -   [getChildren][14]
+    -   [getNonSomaChildren][15]
+    -   [doesAlreadyHaveChild][16]
+        -   [Parameters][17]
+    -   [dive][18]
+        -   [Parameters][19]
+-   [TreeNodeCollection][20]
+    -   [Parameters][21]
+    -   [getRawMorphology][22]
+    -   [getMorphology][23]
 
-## Foo
+## SWC_TYPES
 
-Class representing a foo.
+Defines the SWC standard types as in [http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html][24]
 
-**Parameters**
+## getRawMorphology
 
--   `anAttribute` **[number][5]** a value.
--   `aSecondAttribute` **[number][5]** another value. (optional, default `10`)
+Get the raw morphology flat tree
 
-### setAnAttribute
+Returns **[Object][25]** the soma and all the sections at the same level.
+Still, all the info about parent/children are present
 
-Set anAttribute.
+## getMorphology
 
-**Parameters**
+Get the morphology object, which is much easier to query than the raw morphology
 
--   `a` **[number][5]** the value to give to anAttribute.
+Returns **morphologycorejs.Morphology** 
 
-### printAnAttribute
+## TreeNode
 
-Display anAttribute.
+A TreeNode instance represent a point from the SWC file. It has a 3D coordinate,
+an ID, a type, a radius, a reference to a parent (which is also a TreeNode
+instance) and a list of children (also TreeNode instances).
 
-### getAnAttribute
+**Ressources**
 
-Returns **[number][5]** The anAttribute value.
+-   [SWC Spec][24]
 
-[1]: #foo
+### Parameters
 
-[2]: #setanattribute
+-   `id` **[Number][26]** the id of the point
+-   `type` **[Number][26]** type of structure this point comes from (cf. SWC spec)
+-   `x` **[Number][26]** x component of the 3D coordinates
+-   `y` **[Number][26]** y component of the 3D coordinates
+-   `z` **[Number][26]** z component of the 3D coordinates
+-   `r` **[Number][26]** radius at this given point
 
-[3]: #printanattribute
+### getId
 
-[4]: #getanattribute
+Get the ID of _this_ node
 
-[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+Returns **[Number][26]** 
+
+### getType
+
+Get the type as a number (according to the SWC spec)
+
+Returns **[Number][26]** 
+
+### isSoma
+
+Returns **[Boolean][27]** true if this node is a soma, false if not
+
+### getRadius
+
+Get teh radius of _this_ node
+
+Returns **[Number][26]** 
+
+### getPosition
+
+Get the 3D coordinates of this node
+
+### setParent
+
+Define the parent of _this_ node
+
+#### Parameters
+
+-   `pNode`  
+-   `parent` **[TreeNode][28]** the parent node
+
+### getParent
+
+Get the parent node of _this_ one
+
+Returns **[TreeNode][28]** 
+
+### getChildren
+
+Get all the chidren
+
+Returns **[Array][29]** array of TreeNode instances
+
+### getNonSomaChildren
+
+Get all the children that are not soma points.
+
+Returns **[Array][29]** array of TreeNode instances
+
+### doesAlreadyHaveChild
+
+Check is _this_ node already has the given child amond its list of children
+
+#### Parameters
+
+-   `cNode` **[TreeNode][28]** some node to test, most likely a potential child
+
+Returns **[Boolean][27]** true if this child is already present, false if not
+
+### dive
+
+Dive into the TreeNode connection by following the children. Builds a list
+all along. Stops when a node has no more children (end of branch) or when a
+node has two children or more because it means it's a forking point.
+What is returned in the end is an array that can be empty (if end of branch)
+or with two or more TreeNode instance being the forking direction
+
+#### Parameters
+
+-   `nodeList` **[Array][29]** contains the previous TreeNode (parent, grand parents, etc.)
+    this array is only pushed to, nothing is taken or read from it.
+
+Returns **[Array][29]** of TreeNodes that are forking direction.
+
+## TreeNodeCollection
+
+A TreeNodeCollection instance builds all the TreeNode instances from the raw
+points list from the SWC file. As a second step, it builds the parent/children
+relations between the nodes and as a third step, define a list of sections.
+
+### Parameters
+
+-   `points` **[Array][29]** every points of the array is itself an Array of form:
+    [
+        pointId: Number,
+        pointType: Number,
+        x: Number,
+        y: Number,
+        z: Number,
+        radius: Number,
+        parentId: Number
+      ]
+
+### getRawMorphology
+
+Get the raw morphology flat tree
+
+Returns **[Object][25]** the soma and all the sections at the same level.
+Still, all the info about parent/children are present
+
+### getMorphology
+
+Get the morphology object, which is much easier to query than the raw morphology
+
+Returns **morphologycorejs.Morphology** 
+
+[1]: #swc_types
+
+[2]: #getrawmorphology
+
+[3]: #getmorphology
+
+[4]: #treenode
+
+[5]: #parameters
+
+[6]: #getid
+
+[7]: #gettype
+
+[8]: #issoma
+
+[9]: #getradius
+
+[10]: #getposition
+
+[11]: #setparent
+
+[12]: #parameters-1
+
+[13]: #getparent
+
+[14]: #getchildren
+
+[15]: #getnonsomachildren
+
+[16]: #doesalreadyhavechild
+
+[17]: #parameters-2
+
+[18]: #dive
+
+[19]: #parameters-3
+
+[20]: #treenodecollection
+
+[21]: #parameters-4
+
+[22]: #getrawmorphology-1
+
+[23]: #getmorphology-1
+
+[24]: http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
+
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+
+[26]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[28]: #treenode
+
+[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

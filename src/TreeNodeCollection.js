@@ -1,4 +1,4 @@
-import morphologycorejs from 'morphologycorejs'
+//import morphologycorejs from 'morphologycorejs'
 import { TreeNode } from "./TreeNode.js"
 import { SWC_TYPES } from "./Constants.js"
 
@@ -239,8 +239,9 @@ class TreeNodeCollection {
       sections: this._rawSections
     }
 
-    this._morphology = new morphologycorejs.Morphology()
-    this._morphology.buildFromRawMorphology( this._rawMorphology )
+    // TODO: Maybe later we'll make a moprhology object from morphologycorejs
+    //this._morphology = new morphologycorejs.Morphology()
+    //this._morphology.buildFromRawMorphology( this._rawMorphology )
   }
 
 }

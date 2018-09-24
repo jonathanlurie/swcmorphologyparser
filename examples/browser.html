@@ -58,9 +58,8 @@
 
       let rawMorpho = swcParser.getRawMorphology()
       console.log(rawMorpho)
-      let morpho = swcParser.getMorphology()
-      console.log(morpho)
 
+      // just display the thing as JSON in the textarea
       if (rawMorpho) {
         textdisplay.value = JSON.stringify(rawMorpho, null, 2)
       } else {

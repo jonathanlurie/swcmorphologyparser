@@ -72,20 +72,19 @@
 
       let rawMorpho = swcParser.getRawMorphology()
       console.log(rawMorpho)
-      let morpho = swcParser.getMorphology()
-      console.log(morpho)
 
       if (rawMorpho) {
         // we display a morpho, second param is it's name (null: a autogenarated will do)
         // last param is "do we focus the camera on it"
         morphoViewer.addMorphology (
-          morpho,
+          rawMorpho,
           {
             focusOn: true, // do we want the camera to focus on this one when it's loaded?
-            asPolyline: true, // with polylines of with cylinders?
+            asPolyline: false, // with polylines of with cylinders?
             onDone: null, // what to do when it's loaded?
             //color: Math.floor(Math.random() * 0xFFFFFF), // if not present, all neurones will have there axon in blue, basal dendrite in red and apical dendrite in green
-            somaMode: "fromOrphanSections",
+            //somaMode: "fromOrphanSections",
+            somaMode: "default",
           }
         )
       } else {

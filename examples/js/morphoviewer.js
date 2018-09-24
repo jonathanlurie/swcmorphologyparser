@@ -54592,6 +54592,41 @@
 	    return (optionObj && optionName in optionObj) ? optionObj[optionName] : optionDefaultValue
 	  }
 
+
+
+	    /**
+	     * @private
+	     * Generate a cylinder with a starting point and en endpoint because
+	     * THREEjs does not provide that
+	     * @param {THREE.Vector3} vStart - the start position
+	     * @param {THREE.Vector3} vEnd - the end position
+	     * @param {Number} rStart - radius at the `vStart` position
+	     * @param {Number} rEnd - radius at the `vEnd` position
+	     * @param {Boolean} openEnd - cylinder has open ends if true, or closed ends if false
+	     * @return {THREE.CylinderBufferGeometry} the mesh containing a cylinder
+	     */
+	    static makeCylinder(vStart, vEnd, rStart, rEnd, openEnd, material){
+	      let HALF_PI = Math.PI * .5;
+	      let distance = vStart.distanceTo(vEnd);
+	      let position  = vEnd.clone().add(vStart).divideScalar(2);
+
+	      let offsetPosition = new Matrix4();//a matrix to fix pivot position
+	      offsetPosition.setPosition(position);
+
+	      let cylinder = new CylinderBufferGeometry(rStart, rEnd , distance, 8, 1, openEnd);
+	      let orientation = new Matrix4();//a new orientation matrix to offset pivot
+	      orientation.multiply(offsetPosition); // test to add offset
+	      let offsetRotation = new Matrix4();//a matrix to fix pivot rotation
+	      orientation.lookAt(vStart,vEnd,new Vector3(0,1,0));//look at destination
+	      offsetRotation.makeRotationX(HALF_PI);//rotate 90 degs on X
+	      orientation.multiply(offsetRotation);//combine orientation with rotation transformations
+	      cylinder.applyMatrix(orientation);
+	      return cylinder
+
+	      let mesh = new Mesh(cylinder,material);
+	      return mesh
+	    }
+
 	}
 
 	/**
@@ -56173,6 +56208,45 @@
 	      somaSphere.position.set(somaPoints[0][0], somaPoints[0][1], somaPoints[0][2]);
 	      return somaSphere
 
+	    // this is a 3-point soma, probably colinear
+	    } else if (somaPoints.length === 3) {
+	      /*
+	      let radius = soma.getRadius()
+	      let mat = new THREE.MeshPhongMaterial( {color: 0x000000, transparent: true, opacity:0.3} )
+
+	      let c1 = Tools.makeCylinder(
+	        new THREE.Vector3(...somaPoints[0]),
+	        new THREE.Vector3(...somaPoints[1]),
+	        radius,
+	        radius,
+	        false,
+	        mat
+	      )
+
+	      let c2 = Tools.makeCylinder(
+	        new THREE.Vector3(...somaPoints[1]),
+	        new THREE.Vector3(...somaPoints[2]),
+	        radius,
+	        radius,
+	        false,
+	        mat
+	      )
+
+	      let somaCyl = new THREE.Object3D()
+	      somaCyl.add(c1)
+	      somaCyl.add(c2)
+	      return somaCyl
+	      */
+
+	      let somaSphere = new Mesh(
+	        new SphereGeometry( soma.getRadius(), 32, 32 ),
+	        new MeshPhongMaterial( {color: 0x000000, transparent: true, opacity:0.3} )
+	      );
+
+	      somaSphere.position.set(somaPoints[0][0], somaPoints[0][1], somaPoints[0][2]);
+	      return somaSphere
+
+
 	    // when soma is multiple points
 	    } else if (somaPoints.length > 1) {
 	      // compute the average of the points
@@ -56187,7 +56261,6 @@
 	          centerV
 	        );
 	        geometry.faces.push(new Face3(3 * i, 3 * i + 1, 3 * i + 2));
-
 	      }
 
 	      var somaMesh = new Mesh(geometry, new MeshBasicMaterial( {
@@ -56214,19 +56287,19 @@
 	    let somaPoints = this._morpho.getSoma().getPoints();
 	    let somaMesh = null;
 
-	    // getting all the 1st points of orphan sections
-	    let somaPolygonPoints = this._morpho.getOrphanSections().map(function(s){
-	      let allPoints = s.getPoints();
-	      let firstOne = allPoints[1];
-	      return new Vector3(...firstOne)
-	    });
-
-	    // adding the points of the soma (adds values mostly if we a soma polygon)
-	    for (let i=0; i<somaPoints.length; i++) {
-	      somaPolygonPoints.push(new Vector3(...somaPoints[i]));
-	    }
-
 	    try {
+	      // getting all the 1st points of orphan sections
+	      let somaPolygonPoints = this._morpho.getOrphanSections().map(function(s){
+	        let allPoints = s.getPoints();
+	        let firstOne = allPoints[1];
+	        return new Vector3(...firstOne)
+	      });
+
+	      // adding the points of the soma (adds values mostly if we a soma polygon)
+	      for (let i=0; i<somaPoints.length; i++) {
+	        somaPolygonPoints.push(new Vector3(...somaPoints[i]));
+	      }
+
 	      let geometry = new ConvexGeometry( somaPolygonPoints );
 	      let material = new MeshPhongMaterial( {
 	        color: 0x555555,
@@ -56782,7 +56855,8 @@
 	    // creating a polyline for each section
 	    for (let i=0; i<sections.length; i++) {
 	      let section = this._buildSection( sections[i] );
-	      this.add( section );
+	      if (section)
+	        this.add( section );
 	    }
 
 	    // adding the soma as a sphere
@@ -56812,6 +56886,9 @@
 	    let sectionPoints = section.getPoints();
 	    let sectionRadius = section.getRadiuses();
 	    let startIndex = section.getParent() ? 0 : 1;
+
+	    if ((sectionPoints.length - startIndex) < 2)
+	      return null
 
 	    let arrayOfGeom = [];
 
@@ -57557,4 +57634,3 @@
 	Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-//# sourceMappingURL=morphoviewer.js.map
