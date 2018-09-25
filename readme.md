@@ -1,6 +1,7 @@
 # SWC moprhology parser
 
-Parses SWC neuron morphology files in JavaScript.
+An instance of SwcParser is made to parse SWC files with [the given specification](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html).  
+The data output by this parser is a Javascript object representing a the tree structure of the morphology. Each node of the tree is a section that contain a reference to its parent section and references to its children sections. The tree is given flat, meaning all the sections are at the same hierarchy level within the JS object and every section is identified by an arbitrary ID.
 
 ## Example
 ```JavaScript

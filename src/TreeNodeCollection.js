@@ -1,7 +1,6 @@
-//import morphologycorejs from 'morphologycorejs'
-import { TreeNode } from "./TreeNode.js"
-import { SWC_TYPES } from "./Constants.js"
-
+import morphologycorejs from 'morphologycorejs'
+import { TreeNode } from './TreeNode.js'
+import { SWC_TYPES } from './Constants.js'
 
 /**
  * A TreeNodeCollection instance builds all the TreeNode instances from the raw
@@ -9,7 +8,6 @@ import { SWC_TYPES } from "./Constants.js"
  * relations between the nodes and as a third step, define a list of sections.
  */
 class TreeNodeCollection {
-
   /**
    * @param {Array} points - every points of the array is itself an Array of form:
    * [
@@ -30,9 +28,8 @@ class TreeNodeCollection {
     this._morphology = null
     this._initCollection(points)
     this._buildSections()
-    this._buildRawMorphology()
+    this._buildMorphologyObjects()
   }
-
 
   /**
    * Get the raw morphology flat tree
@@ -43,7 +40,6 @@ class TreeNodeCollection {
     return this._rawMorphology
   }
 
-
   /**
    * Get the morphology object, which is much easier to query than the raw morphology
    * @return {morphologycorejs.Morphology}
@@ -53,7 +49,6 @@ class TreeNodeCollection {
     return this._morphology
   }
 
-
   /**
    * @private
    * Makes the list of nodes
@@ -61,14 +56,14 @@ class TreeNodeCollection {
   _initCollection (points) {
     let somaNodes = []
 
-    for (let i=0; i<points.length; i++) {
+    for (let i = 0; i < points.length; i++) {
       let aNode = new TreeNode(
         points[i][0], // id
         points[i][1], // type
         points[i][2], // x
         points[i][3], // y
         points[i][4], // z
-        points[i][5], // radius
+        points[i][5] // radius
       )
 
       this._nodes[points[i][0]] = aNode
@@ -84,25 +79,23 @@ class TreeNodeCollection {
       let parentId = points[i][6]
 
       // the first point of the soma has no parent
-      if (parentId === -1)
-        continue
+      if (parentId === -1) { continue }
 
       let theParentNode = this._nodes[ parentId ]
-      aNode.setParent( theParentNode )
+      aNode.setParent(theParentNode)
     }
 
     // build the soma if we have some soma points
     if (somaNodes.length) {
       this._rawSoma = {
         id: 0, // just to have the same format as the NeuroM converter
-        type: "soma",
+        type: 'soma',
         // the radius are usually all the same, but just in case, we take the largest one
-        radius: Math.max( ...somaNodes.map(function(n){return n.getRadius()}) ),
-        points: somaNodes.map(function(n){return {position: n.getPosition()}})
+        radius: Math.max(...somaNodes.map(function (n) { return n.getRadius() })),
+        points: somaNodes.map(function (n) { return { position: n.getPosition() } })
       }
     }
   }
-
 
   /**
    * @private
@@ -125,21 +118,20 @@ class TreeNodeCollection {
       }
     }
 
-    if (!firstValidNode ) {
-      console.warn("No valid section here")
+    if (!firstValidNode) {
+      console.warn('No valid section here')
       return
     }
 
     let stack = []
 
     // add all the children of the firstValidNode into the stack
-    for (let i=0; i<firstValidChildren.length; i++) {
+    for (let i = 0; i < firstValidChildren.length; i++) {
       stack.push({
         node: firstValidChildren[i],
         parentSectionId: null
       })
     }
-
 
     function buildRawSection (startingNode, parentSectionId) {
       // the nodeList is the list of node for the section we are building.
@@ -152,12 +144,12 @@ class TreeNodeCollection {
         nodeList.push(startingNode.getParent())
       }
 
-      //nodeList.push(startingNode)
-      //let nextNodes = startingNode.getNonSomaChildren()[0].dive(nodeList)
+      // nodeList.push(startingNode)
+      // let nextNodes = startingNode.getNonSomaChildren()[0].dive(nodeList)
 
       let nextNodes = startingNode.dive(nodeList)
 
-      let points = nodeList.map(function(n){
+      let points = nodeList.map(function (n) {
         return {
           position: n.getPosition(),
           radius: n.getRadius()
@@ -187,7 +179,7 @@ class TreeNodeCollection {
       }
 
       // adding the next nodes as new section starting points
-      for (let i=0; i<nextNodes.length; i++) {
+      for (let i = 0; i < nextNodes.length; i++) {
         stack.push({
           node: nextNodes[i],
           parentSectionId: currentSectionId
@@ -202,35 +194,33 @@ class TreeNodeCollection {
     while (stack.length) {
       let stackElem = stack.pop()
       let section = buildRawSection(stackElem.node, stackElem.parentSectionId)
-      sections.push( section )
+      sections.push(section)
       sections[section.id] = section
     }
 
     if (sections.length) {
       this._rawSections = sections
     }
-
   }
-
 
   /**
    * @private
    * Performs some verification and then assemble the raw morphology
    */
-  _buildRawMorphology () {
+  _buildMorphologyObjects () {
     // it's ok to not have any section
     if (!this._rawSections) {
-      console.warn("This morphology has no section to export")
+      console.warn('This morphology has no section to export')
     }
 
     // it's ok to not have a soma
     if (!this._rawSoma) {
-      console.warn("This morphology has no soma to show")
+      console.warn('This morphology has no soma to show')
     }
 
     // but it's not ok to have nothing at all
     if (!this._rawSections && !this._rawSoma) {
-      console.warn("No valid morphology data.")
+      console.warn('No valid morphology data.')
       return
     }
 
@@ -239,11 +229,9 @@ class TreeNodeCollection {
       sections: this._rawSections
     }
 
-    // TODO: Maybe later we'll make a moprhology object from morphologycorejs
-    //this._morphology = new morphologycorejs.Morphology()
-    //this._morphology.buildFromRawMorphology( this._rawMorphology )
+    this._morphology = new morphologycorejs.Morphology()
+    this._morphology.buildFromRawMorphology( this._rawMorphology )
   }
-
 }
 
 export { TreeNodeCollection }

@@ -1,5 +1,4 @@
-import { SWC_TYPES } from "./Constants.js"
-
+import { SWC_TYPES } from './Constants.js'
 
 /**
  * A TreeNode instance represent a point from the SWC file. It has a 3D coordinate,
@@ -10,7 +9,6 @@ import { SWC_TYPES } from "./Constants.js"
  * - [SWC Spec](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html)
  */
 class TreeNode {
-
   /**
    * @param {Number} id - the id of the point
    * @param {Number} type - type of structure this point comes from (cf. SWC spec)
@@ -19,7 +17,7 @@ class TreeNode {
    * @param {Number} z - z component of the 3D coordinates
    * @param {Number} r - radius at this given point
    */
-  constructor (id, type, x, y, z, r ) {
+  constructor (id, type, x, y, z, r) {
     this._id = id
     this._type = type
     this._position = [x, y, z]
@@ -31,7 +29,6 @@ class TreeNode {
     this._hasSomaChildren = false
   }
 
-
   /**
    * Get the ID of _this_ node
    * @return {Number}
@@ -40,7 +37,6 @@ class TreeNode {
     return this._id
   }
 
-
   /**
    * Get the type as a number (according to the SWC spec)
    * @return {Number}
@@ -48,7 +44,6 @@ class TreeNode {
   getType () {
     return this._type
   }
-
 
   /**
    * @return {Boolean} true if this node is a soma, false if not
@@ -64,7 +59,6 @@ class TreeNode {
   getRadius () {
     return this._radius
   }
-
 
   /**
    * Get the 3D coordinates of this node
@@ -82,7 +76,6 @@ class TreeNode {
     pNode._addChild(this)
   }
 
-
   /**
    * Get the parent node of _this_ one
    * @return {TreeNode}
@@ -90,7 +83,6 @@ class TreeNode {
   getParent () {
     return this._parent
   }
-
 
   /**
    * @private
@@ -105,7 +97,6 @@ class TreeNode {
     }
   }
 
-
   /**
    * Get all the chidren
    * @return {Array} array of TreeNode instances
@@ -113,7 +104,6 @@ class TreeNode {
   getChildren () {
     return this._children
   }
-
 
   /**
    * Get all the children that are not soma points.
@@ -126,7 +116,7 @@ class TreeNode {
 
     let nonSomaChildren = []
 
-    for (let i=0; i<this._children.length; i++) {
+    for (let i = 0; i < this._children.length; i++) {
       if (!this._children[i].isSoma()) {
         nonSomaChildren.push(this._children[i])
       }
@@ -134,20 +124,17 @@ class TreeNode {
     return nonSomaChildren
   }
 
-
   /**
    * Check is _this_ node already has the given child amond its list of children
    * @param {TreeNode} cNode - some node to test, most likely a potential child
    * @return {Boolean} true if this child is already present, false if not
    */
   doesAlreadyHaveChild (cNode) {
-    for (let i=0; i<this._children.length; i++) {
-      if (this._children[i].getId() === cNode.getId())
-        return true
+    for (let i = 0; i < this._children.length; i++) {
+      if (this._children[i].getId() === cNode.getId()) { return true }
     }
     return false
   }
-
 
   /**
    * Dive into the TreeNode connection by following the children. Builds a list
@@ -167,13 +154,11 @@ class TreeNode {
 
     // this current node is in the middle of a sections, we go on...
     if (children.length === 1) {
-
       if (children[0].getType() === this._type) {
         return children[0].dive(nodeList)
       } else {
         console.warn(`Non-soma node (id:${this._id} type:${this._type}) has a single child of different type (id:${children[0].getId()} type:${this.getType()})`)
       }
-
 
     // this is or a ending point (no children) or a forking point (2 children or more).
     // In both case, this the end of a sections
@@ -181,7 +166,6 @@ class TreeNode {
       return children
     }
   }
-
 }
 
 export { TreeNode }

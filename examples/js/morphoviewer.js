@@ -54594,52 +54594,111 @@
 
 
 
-	    /**
-	     * @private
-	     * Generate a cylinder with a starting point and en endpoint because
-	     * THREEjs does not provide that
-	     * @param {THREE.Vector3} vStart - the start position
-	     * @param {THREE.Vector3} vEnd - the end position
-	     * @param {Number} rStart - radius at the `vStart` position
-	     * @param {Number} rEnd - radius at the `vEnd` position
-	     * @param {Boolean} openEnd - cylinder has open ends if true, or closed ends if false
-	     * @return {THREE.CylinderBufferGeometry} the mesh containing a cylinder
-	     */
-	    static makeCylinder(vStart, vEnd, rStart, rEnd, openEnd, material){
-	      let HALF_PI = Math.PI * .5;
-	      let distance = vStart.distanceTo(vEnd);
-	      let position  = vEnd.clone().add(vStart).divideScalar(2);
+	  /**
+	   * @private
+	   * Generate a cylinder with a starting point and en endpoint because
+	   * THREEjs does not provide that
+	   * @param {THREE.Vector3} vStart - the start position
+	   * @param {THREE.Vector3} vEnd - the end position
+	   * @param {Number} rStart - radius at the `vStart` position
+	   * @param {Number} rEnd - radius at the `vEnd` position
+	   * @param {Boolean} openEnd - cylinder has open ends if true, or closed ends if false
+	   * @return {THREE.CylinderBufferGeometry} the mesh containing a cylinder
+	   */
+	  static makeCylinder(vStart, vEnd, rStart, rEnd, openEnd, material){
+	    let HALF_PI = Math.PI * .5;
+	    let distance = vStart.distanceTo(vEnd);
+	    let position  = vEnd.clone().add(vStart).divideScalar(2);
 
-	      let offsetPosition = new Matrix4();//a matrix to fix pivot position
-	      offsetPosition.setPosition(position);
+	    let offsetPosition = new Matrix4();//a matrix to fix pivot position
+	    offsetPosition.setPosition(position);
 
-	      let cylinder = new CylinderBufferGeometry(rStart, rEnd , distance, 8, 1, openEnd);
-	      let orientation = new Matrix4();//a new orientation matrix to offset pivot
-	      orientation.multiply(offsetPosition); // test to add offset
-	      let offsetRotation = new Matrix4();//a matrix to fix pivot rotation
-	      orientation.lookAt(vStart,vEnd,new Vector3(0,1,0));//look at destination
-	      offsetRotation.makeRotationX(HALF_PI);//rotate 90 degs on X
-	      orientation.multiply(offsetRotation);//combine orientation with rotation transformations
-	      cylinder.applyMatrix(orientation);
-	      return cylinder
+	    let cylinder = new CylinderBufferGeometry(rStart, rEnd , distance, 8, 1, openEnd);
+	    let orientation = new Matrix4();//a new orientation matrix to offset pivot
+	    orientation.multiply(offsetPosition); // test to add offset
+	    let offsetRotation = new Matrix4();//a matrix to fix pivot rotation
+	    orientation.lookAt(vStart,vEnd,new Vector3(0,1,0));//look at destination
+	    offsetRotation.makeRotationX(HALF_PI);//rotate 90 degs on X
+	    orientation.multiply(offsetRotation);//combine orientation with rotation transformations
+	    cylinder.applyMatrix(orientation);
+	    return cylinder
 
-	      let mesh = new Mesh(cylinder,material);
-	      return mesh
+	    let mesh = new Mesh(cylinder,material);
+	    return mesh
+	  }
+
+	}
+
+	/*
+	* Author   Jonathan Lurie - http://me.jonathanlurie.fr
+	* License  MIT
+	* Link     https://github.com/Pixpipe/quickvoxelcore
+	* Lab      MCIN - Montreal Neurological Institute
+	*/
+
+
+	/**
+	 * The EventManager deals with events, create them, call them.
+	 * This class is mostly for being inherited from.
+	 */
+	class EventManager {
+	  /**
+	   * Constructor
+	   */
+	  constructor () {
+	    this._events = {}; 
+	  }
+
+
+	  /**
+	   * Define an event, with a name associated with a function
+	   * @param  {String} eventName - Name to give to the event
+	   * @param  {Function} callback - function associated to the even
+	   */
+	  on (eventName, callback) {
+	    if( typeof callback === "function" ){
+	      if (!(eventName in this._events)) {
+	        this._events[ eventName ] = [];
+	      }
+	      this._events[ eventName ].push( callback );
+	    } else {
+	      console.warn('The callback must be of type Function');
 	    }
+	  }
+
+
+	  emit (eventName, args=[]) {
+	    // the event must exist and be non null
+	    if( (eventName in this._events) && (this._events[eventName].length>0) ){
+	      let events = this._events[ eventName ];
+	      for (let i=0; i<events.length; i++) {
+	        events[i](...args);
+	      }
+	    } else {
+	      console.warn('No function associated to the event ' + eventName );
+	    }
+	  }
+
 
 	}
 
 	/**
 	 * ThreeContext creates a WebGL context using THREEjs. It also handle mouse control.
 	 * A MorphologyPolyline instance is added to it.
+	 * An event can be associated to a ThreeContext instance: `onRaycast` with the method
+	 * `.on("onRaycast", function(s){...})` where `s` is the section object being raycasted.
 	 */
-	class ThreeContext {
+	class ThreeContext extends EventManager {
 
 	  /**
 	   * @param {DONObject} divObj - the div object as a DOM element. Will be used to host the WebGL context
 	   * created by THREE
 	   */
 	  constructor ( divObj=null ) {
+	    super();
+
+	    let that = this;
+
 	    if (!divObj) {
 	      console.error("The ThreeContext needs a div object");
 	      return
@@ -54647,7 +54706,7 @@
 
 	    this._requestFrameId = null;
 
-	    this._morphologyPolylineCollection = {};
+	    this._morphologyMeshCollection = {};
 	    this._meshCollection = {};
 
 	    // init camera
@@ -54669,6 +54728,7 @@
 	    light2.position.set( -1000, -1000, -1000 );
 	    this._scene.add( light2 );
 
+
 	    this._renderer = new WebGLRenderer( { antialias: true, alpha: true, preserveDrawingBuffer: true} );
 	    this._renderer.setClearColor( 0xffffff, 0 );
 	    this._renderer.setPixelRatio( window.devicePixelRatio );
@@ -54677,11 +54737,29 @@
 	    this._renderer.gammaOutput = true;
 	    divObj.appendChild( this._renderer.domElement );
 
+	    // all the necessary for raycasting
+	    this._raycaster = new Raycaster();
+	    this._raycastMouse = new Vector2();
+
+	    function onMouseMove( event ) {
+	      let elem = that._renderer.domElement;
+	      let relX = event.pageX - elem.offsetLeft;
+	      let relY = event.pageY - elem.offsetTop;
+
+	      that._raycastMouse.x = ( relX / that._renderer.domElement.clientWidth ) * 2 - 1;
+	      that._raycastMouse.y = - ( relY / that._renderer.domElement.clientHeight ) * 2 + 1;
+	    }
+
+	    this._renderer.domElement.addEventListener( 'mousemove', onMouseMove, false );
+	    this._renderer.domElement.addEventListener( 'dblclick', function(evt){
+	      that._performRaycast();
+	    }, false );
+
+	    // mouse controls
 	    this._controls = new TrackballControls( this._camera, this._renderer.domElement );
 	    this._controls.rotateSpeed = 10;
 	    this._controls.addEventListener( 'change', this._render.bind(this) );
 
-	    let that = this;
 	    window.addEventListener( 'resize', function() {
 	      that._camera.aspect = divObj.clientWidth / divObj.clientHeight;
 	      that._camera.updateProjectionMatrix();
@@ -54780,6 +54858,35 @@
 	  }
 
 
+
+	  /**
+	   * @private
+	   * Throw a ray from the camera to the pointer, potentially intersect some sections.
+	   * If so, emit the event `onRaycast` with the section instance as argument
+	   */
+	  _performRaycast () {
+	    // update the picking ray with the camera and mouse position
+	    this._raycaster.setFromCamera( this._raycastMouse, this._camera );
+
+	    // calculate objects intersecting the picking ray
+	    var intersects = this._raycaster.intersectObjects( this._scene.children, true );
+
+	    if (intersects.length) {
+	      //console.log(this._morphologyMeshCollection)
+	      let sectionMesh = intersects[ 0 ].object;
+
+	      if ("sectionId" in sectionMesh.userData) {
+	        let sectionId = sectionMesh.userData.sectionId;
+	        let morphologyObj = sectionMesh.parent.getMorphology();
+	        this.emit("onRaycast", [morphologyObj._sections[sectionId]]);
+	      } else {
+	        this.emit("onRaycast", [null]);
+	      }
+
+	    }
+	  }
+
+
 	  /**
 	   * Add a MorphoPolyline object (which are ThreeJS Object3D) into the scene of this
 	   * ThreeContext.
@@ -54791,11 +54898,13 @@
 	   */
 	  addMorphology (morphoMesh, options) {
 	    // generate a random name in case none was provided
-	    let name = Tools.getOption( options, "name", "morpho_" + Math.round(Math.random() * 1000000).toString() );
+	    let name = options.name; // set before
 	    let focusOn = Tools.getOption( options, "focusOn", true );
 	    let focusDistance = Tools.getOption( options, "distance", 1000 );
 
-	    this._morphologyPolylineCollection[ name ] = morphoMesh;
+	    morphoMesh.userData["morphologyName"] = name;
+
+	    this._morphologyMeshCollection[ name ] = morphoMesh;
 	    this._scene.add( morphoMesh );
 
 	    if (focusOn)
@@ -54818,7 +54927,7 @@
 	  focusOnMorphology (name=null, distance=1000) {
 	    // if no name of morphology is provided, we take the first one
 	    if (!name) {
-	      let allNames = Object.keys( this._morphologyPolylineCollection );
+	      let allNames = Object.keys( this._morphologyMeshCollection );
 	      if (allNames.length) {
 	        name = allNames[0];
 	      } else {
@@ -54826,7 +54935,7 @@
 	      }
 	    }
 
-	    let morpho = this._morphologyPolylineCollection[ name ];
+	    let morpho = this._morphologyMeshCollection[ name ];
 	    //let morphoBox = morpho.box
 	    //let boxSize = new THREE.Vector3()
 	    //morphoBox.getSize(boxSize)
@@ -54864,7 +54973,7 @@
 	    this._camera = null;
 	    this._controls = null;
 	    this._scene = null;
-	    this._morphologyPolylineCollection = null;
+	    this._morphologyMeshCollection = null;
 	    this._meshCollection = null;
 	    this._renderer.domElement.remove();
 	    this._renderer = null;
@@ -56359,6 +56468,14 @@
 	  }
 
 
+	  /**
+	   * Get the morphology object tied to _this_ mesh
+	   * @return {morphologycorejs.Morphology} 
+	   */
+	  getMorphology () {
+	    return this._morpho
+	  }
+
 	}
 
 	/**
@@ -56430,6 +56547,7 @@
 
 	    // adding some metadata as it can be useful for raycasting
 	    line.name = section.getId();
+	    line.userData[ "sectionId" ] = section.getId();
 	    line.userData[ "typevalue" ] = section.getTypevalue();
 	    line.userData[ "typename" ] = section.getTypename();
 
@@ -56894,7 +57012,7 @@
 
 	    for (let i=startIndex; i<sectionPoints.length - 1; i++)
 	    {
-	      let cyl = this._makeCylinder(
+	      let cyl = Tools.makeCylinder(
 	        new Vector3( // vStart
 	          sectionPoints[i][0],
 	          sectionPoints[i][1],
@@ -56918,46 +57036,12 @@
 
 	    // adding some metadata as it can be useful for raycasting
 	    sectionMesh.name = section.getId();
+	    sectionMesh.userData[ "sectionId" ] = section.getId();
 	    sectionMesh.userData[ "typevalue" ] = section.getTypevalue();
 	    sectionMesh.userData[ "typename" ] = section.getTypename();
 
 	    return sectionMesh
 	  }
-
-
-	  /**
-	   * @private
-	   * Generate a cylinder with a starting point and en endpoint because
-	   * THREEjs does not provide that
-	   * @param {THREE.Vector3} vStart - the start position
-	   * @param {THREE.Vector3} vEnd - the end position
-	   * @param {Number} rStart - radius at the `vStart` position
-	   * @param {Number} rEnd - radius at the `vEnd` position
-	   * @param {Boolean} openEnd - cylinder has open ends if true, or closed ends if false
-	   * @return {THREE.CylinderBufferGeometry} the mesh containing a cylinder
-	   */
-	  _makeCylinder(vStart, vEnd, rStart, rEnd, openEnd, material){
-	    let HALF_PI = Math.PI * .5;
-	    let distance = vStart.distanceTo(vEnd);
-	    let position  = vEnd.clone().add(vStart).divideScalar(2);
-
-	    let offsetPosition = new Matrix4();//a matrix to fix pivot position
-	    offsetPosition.setPosition(position);
-
-	    let cylinder = new CylinderBufferGeometry(rStart, rEnd , distance, 8, 1, openEnd);
-	    let orientation = new Matrix4();//a new orientation matrix to offset pivot
-	    orientation.multiply(offsetPosition); // test to add offset
-	    let offsetRotation = new Matrix4();//a matrix to fix pivot rotation
-	    orientation.lookAt(vStart,vEnd,new Vector3(0,1,0));//look at destination
-	    offsetRotation.makeRotationX(HALF_PI);//rotate 90 degs on X
-	    orientation.multiply(offsetRotation);//combine orientation with rotation transformations
-	    cylinder.applyMatrix(orientation);
-	    return cylinder
-
-	    let mesh = new Mesh(cylinder,material);
-	    return mesh
-	  }
-
 
 	}
 
@@ -56970,6 +57054,34 @@
 	  * License  Apache License 2.0
 	  * Lab      Blue Brain Project, EPFL
 	  */
+
+
+	  /*
+	  Standardized swc files (www.neuromorpho.org)
+	  0 - undefined
+	  1 - soma
+	  2 - axon
+	  3 - (basal) dendrite
+	  4 - apical dendrite
+	  5+ - custom
+	  */
+	  const TYPEVALUE_2_TYPENAME = {
+	    "0" : "undefined",
+	    "1" : "soma",
+	    "2" : "axon",
+	    "3" : "basal_dendrite",
+	    "4" : "apical_dendrite",
+	    "5" : "custom"
+	  };
+
+	  const TYPENAME_2_TYPEVALUE = {
+	    "undefined" : 0,
+	    "soma" : 1,
+	    "axon" : 2,
+	    "basal_dendrite" : 3,
+	    "apical_dendrite" : 4,
+	    "custom" : 5
+	  };
 
 
 	  /**
@@ -56998,34 +57110,6 @@
 	      this._points = null;
 	      this._radiuses = null;
 	      this._morphology = morphology;
-
-
-	      /*
-	      Standardized swc files (www.neuromorpho.org)
-	      0 - undefined
-	      1 - soma
-	      2 - axon
-	      3 - (basal) dendrite
-	      4 - apical dendrite
-	      5+ - custom
-	      */
-	      this._typevalueToTypename = {
-	        "0" : "undefined",
-	        "1" : "soma",
-	        "2" : "axon",
-	        "3" : "basal_dendrite",
-	        "4" : "apical_dendrite",
-	        "5" : "custom"
-	      };
-
-	      this._typenameToTypevalue = {
-	        "undefined" : 0,
-	        "soma" : 1,
-	        "axon" : 2,
-	        "basal_dendrite" : 3,
-	        "apical_dendrite" : 4,
-	        "custom" : 5
-	      };
 	    }
 
 
@@ -57062,11 +57146,11 @@
 	     * @param {String} tn - the typename
 	     */
 	    setTypename (tn) {
-	      if (tn in this._typenameToTypevalue) {
+	      if (tn in TYPENAME_2_TYPEVALUE) {
 	        this._typename = tn;
-	        this._typevalue = this._typenameToTypevalue[tn];
+	        this._typevalue = TYPENAME_2_TYPEVALUE[tn];
 	      } else {
-	        console.warn( "The typename must be one of " + Object.key(this._typenameToTypevalue).join(" ") );
+	        console.warn( "The typename must be one of " + Object.key(TYPENAME_2_TYPEVALUE).join(" ") );
 	      }
 	    }
 
@@ -57149,8 +57233,8 @@
 
 	      // in some cases, we have only the typename or the typevalue, in this case we perform  a lookup
 	      if (rawSection.typename || rawSection.typevalue) {
-	        this._typename = rawSection.typename || this._typevalueToTypename[rawSection.typevalue];
-	        this._typevalue = rawSection.typevalue || this._typenameToTypevalue[rawSection.typename];
+	        this._typename = rawSection.typename || TYPEVALUE_2_TYPENAME[rawSection.typevalue];
+	        this._typevalue = rawSection.typevalue || TYPENAME_2_TYPEVALUE[rawSection.typename];
 	      }
 
 	      return this._id
@@ -57231,6 +57315,41 @@
 	    }
 
 
+	    /**
+	     * Get the size of _this_ section
+	     * @return {Number}
+	     */
+	    getSize () {
+	      let sum = 0;
+	      for (let i=0; i<this._points.length-1; i++) {
+	        let p1 = this._points[i];
+	        let p2 = this._points[i+1];
+	        let dx = p1[0] - p2[0];
+	        let dy = p1[1] - p2[1];
+	        let dz = p1[2] - p2[2];
+	        sum += Math.sqrt( dx*dx + dy*dy + dz*dz );
+	      }
+
+	      return sum
+	    }
+
+
+	    /**
+	     * Get the morphology object that contains this section
+	     * @return {Morphology}
+	     */
+	    getMorphology () {
+	      return this._morphology
+	    }
+
+
+	    /**
+	     * Get all the children as an Array
+	     * @return {Array}
+	     */
+	    getChildren () {
+	      return this._children
+	    }
 	  }
 
 	  /*
@@ -57416,7 +57535,7 @@
 	      // Build the Section instances.
 	      // This first step does not define parents nor children
 	      for (let i=0; i<rawMorphology.sections.length; i++) {
-	        let s = new Section();
+	        let s = new Section(this);
 	        let sId = s.initWithRawSection( rawMorphology.sections[i] );
 	        this._sections[ sId ] = s;
 	      }
@@ -57427,7 +57546,7 @@
 	        let currentSection = this._sections[ currentRawSection.id ];
 
 	        // adding a parent if there is one
-	        if (currentRawSection.parent){
+	        if (currentRawSection.parent !== null){ // can be 0 but cannot be null (in JS, 0 and null are diff)
 	          let parent = this._sections[ currentRawSection.parent ];
 	          currentSection.setParent( parent );
 	        }
@@ -57571,12 +57690,17 @@
 	    // create a morphology object from the raw object
 	    let morphology = null;
 
+	    // creates an auto name if none is giver
+	    options.name = Tools.getOption( options, "name", "morpho_" + Math.round(Math.random() * 1000000).toString() );
+
 	    if (morphoObj instanceof morphologycorejs$1.Morphology) {
 	      morphology = morphoObj;
 	    } else {
 	      morphology = new morphologycorejs$1.Morphology();
 	      morphology.buildFromRawMorphology( morphoObj );
 	    }
+
+	    morphology.setId(options.name);
 
 	    let asPolyline = Tools.getOption(options, "asPolyline", true);
 
@@ -57627,6 +57751,15 @@
 	    this._threeContext.setCameraFieldOfView(fov);
 	  }
 
+
+	  /**
+	   * Define a callback associated with clicking on a section. The callback function
+	   * is called with the `morphologycorejs.Section` instance as arguments (or `undefined`)
+	   */
+	  onRaycast (cb) {
+	    this._threeContext.on("onRaycast", cb);
+	  }
+
 	}
 
 	exports.MorphoViewer = MorphoViewer;
@@ -57634,3 +57767,4 @@
 	Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
+//# sourceMappingURL=morphoviewer.js.map

@@ -56,8 +56,13 @@
       let t1 = performance.now();
       console.log("Parsing the file took " + (t1 - t0) + " millisecondes.")
 
+      // this one is a flat representation of the morpho tree
       let rawMorpho = swcParser.getRawMorphology()
       console.log(rawMorpho)
+
+      // this one is a more complex representation
+      let morpho = swcParser.getMorphology()
+      console.log(morpho)
 
       // just display the thing as JSON in the textarea
       if (rawMorpho) {

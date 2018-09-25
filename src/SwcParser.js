@@ -1,14 +1,25 @@
 import { TreeNodeCollection } from './TreeNodeCollection.js'
 
 
+/**
+ * An instance of SwcParser is made to parse SWC files with
+ * [the given specification](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html).
+ * The data output by this parser is a Javascript object representing a the tree
+ * structure of the morphology. Each node of the tree is a section that contain a reference
+ * to its parent section and references to its children sections. The tree is given flat, meaning all the sections are at the same hierarchy level within the JS object and every section is identified by an arbitrary ID.
+ */
 class SwcParser {
-
   constructor () {
     this._morphology = null
     this._rawMorphology = null
   }
 
 
+  /**
+   * Parses a SWC string. This SWC string is simply the text content of an SWC file.
+   * This method does not return any reult (use one of the getters for that)
+   * @param {String} swcStr - the string that comes from the SWC file
+   */
   parse (swcStr) {
     this._morphology = null
     this._rawMorphology = null
@@ -17,7 +28,6 @@ class SwcParser {
     this._morphology = treeNodeCollection.getMorphology()
     this._rawMorphology = treeNodeCollection.getRawMorphology()
   }
-
 
   /**
    * Get the raw morphology flat tree
@@ -28,7 +38,6 @@ class SwcParser {
     return this._rawMorphology
   }
 
-
   /**
    * Get the morphology object, which is much easier to query than the raw morphology
    * @return {morphologycorejs.Morphology}
@@ -37,7 +46,6 @@ class SwcParser {
   getMorphology () {
     return this._morphology
   }
-
 
   /**
    * @private
@@ -58,16 +66,16 @@ class SwcParser {
    */
   _extractPoints (swcStr) {
     // remove header/comments from SWC
-    let result = swcStr.replace(/\s*#.*?$/mg,'')
+    let result = swcStr.replace(/\s*#.*?$/mg, '')
     // remove empty lines and empty last line
-    result = result.trim().replace(/^\s*$/mg,'')
+    result = result.trim().replace(/^\s*$/mg, '')
 
     // store the data in memory-efficient typed arrays
     let lines = result.split('\n')
     let swcPoints = []
 
-    for (let i=0; i<lines.length; i++) {
-      let row = lines[i].replace(/^\s+/m,'').replace(/\s+$/m,'').split(/[\s,]+/)
+    for (let i = 0; i < lines.length; i++) {
+      let row = lines[i].replace(/^\s+/m, '').replace(/\s+$/m, '').split(/[\s,]+/)
       if (row.length >= 7) {
         // allow for sloppy SWC that contains integers written as floats
         swcPoints[i] = [
@@ -84,8 +92,6 @@ class SwcParser {
 
     return swcPoints
   }
-
-
 }
 
 export { SwcParser }
