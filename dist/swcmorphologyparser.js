@@ -602,7 +602,6 @@
   var index = ({
     Morphology,
   });
-  //# sourceMappingURL=morphologycorejs.js.map
 
   /*
    * Defines the SWC standard types as in http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
@@ -809,7 +808,6 @@
      *   ]
      */
     constructor(points) {
-      console.log(index);
       this._nodes = {};
       this._rawSoma = null;
       this._rawSections = null;

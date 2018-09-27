@@ -2,44 +2,41 @@
 
 ### Table of Contents
 
--   [SWC_TYPES][1]
--   [SwcParser][2]
-    -   [parse][3]
-        -   [Parameters][4]
-    -   [getRawMorphology][5]
-    -   [getMorphology][6]
--   [TreeNode][7]
-    -   [Parameters][8]
-    -   [getId][9]
-    -   [getType][10]
-    -   [isSoma][11]
-    -   [getRadius][12]
-    -   [getPosition][13]
-    -   [setParent][14]
-        -   [Parameters][15]
-    -   [getParent][16]
-    -   [getChildren][17]
-    -   [getNonSomaChildren][18]
-    -   [doesAlreadyHaveChild][19]
-        -   [Parameters][20]
-    -   [dive][21]
-        -   [Parameters][22]
--   [TreeNodeCollection][23]
-    -   [Parameters][24]
-    -   [getRawMorphology][25]
-    -   [getMorphology][26]
-
-## SWC_TYPES
-
-Defines the SWC standard types as in [http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html][27]
+-   [SwcParser][1]
+    -   [parse][2]
+        -   [Parameters][3]
+    -   [getRawMorphology][4]
+    -   [getMorphology][5]
+-   [TreeNode][6]
+    -   [Parameters][7]
+    -   [getId][8]
+    -   [getType][9]
+    -   [isSoma][10]
+    -   [getRadius][11]
+    -   [getPosition][12]
+    -   [setParent][13]
+        -   [Parameters][14]
+    -   [getParent][15]
+    -   [getChildren][16]
+    -   [getNonSomaChildren][17]
+    -   [doesAlreadyHaveChild][18]
+        -   [Parameters][19]
+    -   [dive][20]
+        -   [Parameters][21]
+-   [TreeNodeCollection][22]
+    -   [Parameters][23]
+    -   [getRawMorphology][24]
+    -   [getMorphology][25]
 
 ## SwcParser
 
 An instance of SwcParser is made to parse SWC files with
-[the given specification][27].
+[the given specification][26].
 The data output by this parser is a Javascript object representing a the tree
 structure of the morphology. Each node of the tree is a section that contain a reference
-to its parent section and references to its children sections. The tree is given flat, meaning all the sections are at the same hierarchy level within the JS object and every section is identified by an arbitrary ID.
+to its parent section and references to its children sections.
+The tree is given flat, meaning all the sections are at the same hierarchy
+level within the JS object and every section is identified by an arbitrary ID.
 
 ### parse
 
@@ -48,13 +45,13 @@ This method does not return any reult (use one of the getters for that)
 
 #### Parameters
 
--   `swcStr` **[String][28]** the string that comes from the SWC file
+-   `swcStr` **[String][27]** the string that comes from the SWC file
 
 ### getRawMorphology
 
 Get the raw morphology flat tree
 
-Returns **[Object][29]** the soma and all the sections at the same level.
+Returns **[Object][28]** the soma and all the sections at the same level.
 Still, all the info about parent/children are present
 
 ### getMorphology
@@ -71,38 +68,38 @@ instance) and a list of children (also TreeNode instances).
 
 **Ressources**
 
--   [SWC Spec][27]
+-   [SWC Spec][26]
 
 ### Parameters
 
--   `id` **[Number][30]** the id of the point
--   `type` **[Number][30]** type of structure this point comes from (cf. SWC spec)
--   `x` **[Number][30]** x component of the 3D coordinates
--   `y` **[Number][30]** y component of the 3D coordinates
--   `z` **[Number][30]** z component of the 3D coordinates
--   `r` **[Number][30]** radius at this given point
+-   `id` **[Number][29]** the id of the point
+-   `type` **[Number][29]** type of structure this point comes from (cf. SWC spec)
+-   `x` **[Number][29]** x component of the 3D coordinates
+-   `y` **[Number][29]** y component of the 3D coordinates
+-   `z` **[Number][29]** z component of the 3D coordinates
+-   `r` **[Number][29]** radius at this given point
 
 ### getId
 
 Get the ID of _this_ node
 
-Returns **[Number][30]** 
+Returns **[Number][29]** 
 
 ### getType
 
 Get the type as a number (according to the SWC spec)
 
-Returns **[Number][30]** 
+Returns **[Number][29]** 
 
 ### isSoma
 
-Returns **[Boolean][31]** true if this node is a soma, false if not
+Returns **[Boolean][30]** true if this node is a soma, false if not
 
 ### getRadius
 
 Get teh radius of _this_ node
 
-Returns **[Number][30]** 
+Returns **[Number][29]** 
 
 ### getPosition
 
@@ -115,25 +112,25 @@ Define the parent of _this_ node
 #### Parameters
 
 -   `pNode`  
--   `parent` **[TreeNode][32]** the parent node
+-   `parent` **[TreeNode][31]** the parent node
 
 ### getParent
 
 Get the parent node of _this_ one
 
-Returns **[TreeNode][32]** 
+Returns **[TreeNode][31]** 
 
 ### getChildren
 
 Get all the chidren
 
-Returns **[Array][33]** array of TreeNode instances
+Returns **[Array][32]** array of TreeNode instances
 
 ### getNonSomaChildren
 
 Get all the children that are not soma points.
 
-Returns **[Array][33]** array of TreeNode instances
+Returns **[Array][32]** array of TreeNode instances
 
 ### doesAlreadyHaveChild
 
@@ -141,9 +138,9 @@ Check is _this_ node already has the given child amond its list of children
 
 #### Parameters
 
--   `cNode` **[TreeNode][32]** some node to test, most likely a potential child
+-   `cNode` **[TreeNode][31]** some node to test, most likely a potential child
 
-Returns **[Boolean][31]** true if this child is already present, false if not
+Returns **[Boolean][30]** true if this child is already present, false if not
 
 ### dive
 
@@ -155,10 +152,10 @@ or with two or more TreeNode instance being the forking direction
 
 #### Parameters
 
--   `nodeList` **[Array][33]** contains the previous TreeNode (parent, grand parents, etc.)
+-   `nodeList` **[Array][32]** contains the previous TreeNode (parent, grand parents, etc.)
     this array is only pushed to, nothing is taken or read from it.
 
-Returns **[Array][33]** of TreeNodes that are forking direction.
+Returns **[Array][32]** of TreeNodes that are forking direction.
 
 ## TreeNodeCollection
 
@@ -168,7 +165,7 @@ relations between the nodes and as a third step, define a list of sections.
 
 ### Parameters
 
--   `points` **[Array][33]** every points of the array is itself an Array of form:
+-   `points` **[Array][32]** every points of the array is itself an Array of form:
     [
         pointId: Number,
         pointType: Number,
@@ -183,7 +180,7 @@ relations between the nodes and as a third step, define a list of sections.
 
 Get the raw morphology flat tree
 
-Returns **[Object][29]** the soma and all the sections at the same level.
+Returns **[Object][28]** the soma and all the sections at the same level.
 Still, all the info about parent/children are present
 
 ### getMorphology
@@ -192,68 +189,66 @@ Get the morphology object, which is much easier to query than the raw morphology
 
 Returns **morphologycorejs.Morphology** 
 
-[1]: #swc_types
+[1]: #swcparser
 
-[2]: #swcparser
+[2]: #parse
 
-[3]: #parse
+[3]: #parameters
 
-[4]: #parameters
+[4]: #getrawmorphology
 
-[5]: #getrawmorphology
+[5]: #getmorphology
 
-[6]: #getmorphology
+[6]: #treenode
 
-[7]: #treenode
+[7]: #parameters-1
 
-[8]: #parameters-1
+[8]: #getid
 
-[9]: #getid
+[9]: #gettype
 
-[10]: #gettype
+[10]: #issoma
 
-[11]: #issoma
+[11]: #getradius
 
-[12]: #getradius
+[12]: #getposition
 
-[13]: #getposition
+[13]: #setparent
 
-[14]: #setparent
+[14]: #parameters-2
 
-[15]: #parameters-2
+[15]: #getparent
 
-[16]: #getparent
+[16]: #getchildren
 
-[17]: #getchildren
+[17]: #getnonsomachildren
 
-[18]: #getnonsomachildren
+[18]: #doesalreadyhavechild
 
-[19]: #doesalreadyhavechild
+[19]: #parameters-3
 
-[20]: #parameters-3
+[20]: #dive
 
-[21]: #dive
+[21]: #parameters-4
 
-[22]: #parameters-4
+[22]: #treenodecollection
 
-[23]: #treenodecollection
+[23]: #parameters-5
 
-[24]: #parameters-5
+[24]: #getrawmorphology-1
 
-[25]: #getrawmorphology-1
+[25]: #getmorphology-1
 
-[26]: #getmorphology-1
+[26]: http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
 
-[27]: http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
+[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
 
-[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[28]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
 
-[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
 
-[30]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[30]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
 
-[31]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+[31]: #treenode
 
-[32]: #treenode
-
-[33]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[32]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array

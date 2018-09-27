@@ -205,7 +205,6 @@ class TreeNodeCollection {
    *   ]
    */
   constructor(points) {
-    console.log(morphologycorejs);
     this._nodes = {};
     this._rawSoma = null;
     this._rawSections = null;
