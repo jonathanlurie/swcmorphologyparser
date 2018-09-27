@@ -1,4 +1,4 @@
-import { SWC_TYPES } from './Constants.js'
+import SWC_TYPES from './Constants'
 
 /**
  * A TreeNode instance represent a point from the SWC file. It has a 3D coordinate,
@@ -17,7 +17,7 @@ class TreeNode {
    * @param {Number} z - z component of the 3D coordinates
    * @param {Number} r - radius at this given point
    */
-  constructor (id, type, x, y, z, r) {
+  constructor(id, type, x, y, z, r) {
     this._id = id
     this._type = type
     this._position = [x, y, z]
@@ -33,7 +33,7 @@ class TreeNode {
    * Get the ID of _this_ node
    * @return {Number}
    */
-  getId () {
+  getId() {
     return this._id
   }
 
@@ -41,14 +41,14 @@ class TreeNode {
    * Get the type as a number (according to the SWC spec)
    * @return {Number}
    */
-  getType () {
+  getType() {
     return this._type
   }
 
   /**
    * @return {Boolean} true if this node is a soma, false if not
    */
-  isSoma () {
+  isSoma() {
     return (this._type === SWC_TYPES.SOMA)
   }
 
@@ -56,14 +56,14 @@ class TreeNode {
    * Get teh radius of _this_ node
    * @return {Number}
    */
-  getRadius () {
+  getRadius() {
     return this._radius
   }
 
   /**
    * Get the 3D coordinates of this node
    */
-  getPosition () {
+  getPosition() {
     return this._position
   }
 
@@ -71,7 +71,7 @@ class TreeNode {
    * Define the parent of _this_ node
    * @param {TreeNode} parent - the parent node
    */
-  setParent (pNode) {
+  setParent(pNode) {
     this._parent = pNode
     pNode._addChild(this)
   }
@@ -80,7 +80,7 @@ class TreeNode {
    * Get the parent node of _this_ one
    * @return {TreeNode}
    */
-  getParent () {
+  getParent() {
     return this._parent
   }
 
@@ -89,7 +89,7 @@ class TreeNode {
    * Add a child to _this_ node
    * @param {TreeNode} cNode - a node to add as a child of _this_
    */
-  _addChild (cNode) {
+  _addChild(cNode) {
     if (!this.doesAlreadyHaveChild(cNode)) {
       this._children.push(cNode)
 
@@ -101,7 +101,7 @@ class TreeNode {
    * Get all the chidren
    * @return {Array} array of TreeNode instances
    */
-  getChildren () {
+  getChildren() {
     return this._children
   }
 
@@ -109,14 +109,14 @@ class TreeNode {
    * Get all the children that are not soma points.
    * @return {Array} array of TreeNode instances
    */
-  getNonSomaChildren () {
+  getNonSomaChildren() {
     if (!this._hasSomaChildren) {
       return this._children
     }
 
-    let nonSomaChildren = []
+    const nonSomaChildren = []
 
-    for (let i = 0; i < this._children.length; i++) {
+    for (let i = 0; i < this._children.length; i += 0) {
       if (!this._children[i].isSoma()) {
         nonSomaChildren.push(this._children[i])
       }
@@ -129,8 +129,8 @@ class TreeNode {
    * @param {TreeNode} cNode - some node to test, most likely a potential child
    * @return {Boolean} true if this child is already present, false if not
    */
-  doesAlreadyHaveChild (cNode) {
-    for (let i = 0; i < this._children.length; i++) {
+  doesAlreadyHaveChild(cNode) {
+    for (let i = 0; i < this._children.length; i += 1) {
       if (this._children[i].getId() === cNode.getId()) { return true }
     }
     return false
@@ -146,26 +146,28 @@ class TreeNode {
    * this array is only pushed to, nothing is taken or read from it.
    * @return {Array} of TreeNodes that are forking direction.
    */
-  dive (nodeList) {
+  dive(nodeList) {
     // adding the current node on the list
     nodeList.push(this)
 
-    let children = this.getNonSomaChildren()
+    const children = this.getNonSomaChildren()
 
     // this current node is in the middle of a sections, we go on...
     if (children.length === 1) {
       if (children[0].getType() === this._type) {
         return children[0].dive(nodeList)
-      } else {
-        console.warn(`Non-soma node (id:${this._id} type:${this._type}) has a single child of different type (id:${children[0].getId()} type:${this.getType()})`)
       }
+      console.warn(`Non-soma node (id:${this._id} type:${this._type}) has a single child of different type (id:${children[0].getId()} type:${this.getType()})`)
+
 
     // this is or a ending point (no children) or a forking point (2 children or more).
     // In both case, this the end of a sections
     } else {
       return children
     }
+
+    return []
   }
 }
 
-export { TreeNode }
+export default TreeNode

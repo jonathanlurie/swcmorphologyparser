@@ -1,4 +1,4 @@
-/**
+/*
  * Defines the SWC standard types as in http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
  */
 const SWC_TYPES = {
@@ -7,7 +7,9 @@ const SWC_TYPES = {
   AXON: 2,
   BASAL_DENDRITE: 3,
   APICAL_DENDRITE: 4,
-  CUSTOM: 5
+  CUSTOM: 5,
 }
 
-export { SWC_TYPES }
+export default ({
+  SWC_TYPES,
+})

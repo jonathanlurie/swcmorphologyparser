@@ -1,4 +1,4 @@
-import { TreeNodeCollection } from './TreeNodeCollection.js'
+import TreeNodeCollection from './TreeNodeCollection'
 
 
 /**
@@ -6,10 +6,12 @@ import { TreeNodeCollection } from './TreeNodeCollection.js'
  * [the given specification](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html).
  * The data output by this parser is a Javascript object representing a the tree
  * structure of the morphology. Each node of the tree is a section that contain a reference
- * to its parent section and references to its children sections. The tree is given flat, meaning all the sections are at the same hierarchy level within the JS object and every section is identified by an arbitrary ID.
+ * to its parent section and references to its children sections.
+ * The tree is given flat, meaning all the sections are at the same hierarchy
+ * level within the JS object and every section is identified by an arbitrary ID.
  */
 class SwcParser {
-  constructor () {
+  constructor() {
     this._morphology = null
     this._rawMorphology = null
   }
@@ -20,11 +22,11 @@ class SwcParser {
    * This method does not return any reult (use one of the getters for that)
    * @param {String} swcStr - the string that comes from the SWC file
    */
-  parse (swcStr) {
+  parse(swcStr) {
     this._morphology = null
     this._rawMorphology = null
-    let rawPoints = this._extractPoints(swcStr)
-    let treeNodeCollection = new TreeNodeCollection(rawPoints)
+    const rawPoints = SwcParser.extractPoints(swcStr)
+    const treeNodeCollection = new TreeNodeCollection(rawPoints)
     this._morphology = treeNodeCollection.getMorphology()
     this._rawMorphology = treeNodeCollection.getRawMorphology()
   }
@@ -34,7 +36,7 @@ class SwcParser {
    * @return {Object} the soma and all the sections at the same level.
    * Still, all the info about parent/children are present
    */
-  getRawMorphology () {
+  getRawMorphology() {
     return this._rawMorphology
   }
 
@@ -43,7 +45,7 @@ class SwcParser {
    * @return {morphologycorejs.Morphology}
    *
    */
-  getMorphology () {
+  getMorphology() {
     return this._morphology
   }
 
@@ -64,18 +66,18 @@ class SwcParser {
    * @param {String} swcStr - the string from the SWC file
    * @return {Array} all the points
    */
-  _extractPoints (swcStr) {
+  static extractPoints(swcStr) {
     // remove header/comments from SWC
     let result = swcStr.replace(/\s*#.*?$/mg, '')
     // remove empty lines and empty last line
     result = result.trim().replace(/^\s*$/mg, '')
 
     // store the data in memory-efficient typed arrays
-    let lines = result.split('\n')
-    let swcPoints = []
+    const lines = result.split('\n')
+    const swcPoints = []
 
-    for (let i = 0; i < lines.length; i++) {
-      let row = lines[i].replace(/^\s+/m, '').replace(/\s+$/m, '').split(/[\s,]+/)
+    for (let i = 0; i < lines.length; i += 1) {
+      const row = lines[i].replace(/^\s+/m, '').replace(/\s+$/m, '').split(/[\s,]+/)
       if (row.length >= 7) {
         // allow for sloppy SWC that contains integers written as floats
         swcPoints[i] = [
@@ -85,7 +87,7 @@ class SwcParser {
           parseFloat(row[3]),
           parseFloat(row[4]),
           parseFloat(row[5]),
-          Math.round(parseFloat(row[6]))
+          Math.round(parseFloat(row[6])),
         ]
       }
     }
@@ -94,4 +96,4 @@ class SwcParser {
   }
 }
 
-export { SwcParser }
+export default SwcParser

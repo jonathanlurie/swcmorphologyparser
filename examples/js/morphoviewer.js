@@ -54627,6 +54627,21 @@
 	    return mesh
 	  }
 
+
+
+	  static triggerDownload (strData, filename) {
+	    var link = document.createElement('a');
+	    if (typeof link.download === 'string') {
+	      document.body.appendChild(link); //Firefox requires the link to be in the body
+	      link.download = filename;
+	      link.href = strData;
+	      link.click();
+	      document.body.removeChild(link); //remove the link when done
+	    } else {
+	      location.replace(uri);
+	    }
+	  }
+
 	}
 
 	/*
@@ -54963,6 +54978,16 @@
 	    this._render();
 	  }
 
+	  /**
+	   * Get the png image data as base64, in order to later, export as a file
+	   */
+	  getSnapshotData () {
+	    let strMime = "image/png";
+	    //let strDownloadMime = "image/octet-stream"
+	    let imgData = this._renderer.domElement.toDataURL(strMime);
+	    //imgData.replace(strMime, strDownloadMime)
+	    return imgData
+	  }
 
 	  /**
 	   * Kills the scene, interaction, animation and reset all objects to null
@@ -56463,14 +56488,16 @@
 	      lookat.applyAxisAngle ( new Vector3(0, 1, 0), Math.PI );
 	      return lookat
 	    } else {
-	      return this.box.getCenter().clone()
+	      let center = new Vector3();
+	      this.box.getCenter(center);
+	      return center
 	    }
 	  }
 
 
 	  /**
 	   * Get the morphology object tied to _this_ mesh
-	   * @return {morphologycorejs.Morphology} 
+	   * @return {morphologycorejs.Morphology}
 	   */
 	  getMorphology () {
 	    return this._morpho
@@ -56506,9 +56533,12 @@
 	      this.add( sectionPolyline );
 	    }
 
-	    // adding the soma as a sphere
-	    let somaShape = this._buildSoma(options);
-	    this.add( somaShape );
+	    // adding the soma mesh, but sometimes, there is no soma
+	    let somaData = this._morpho.getSoma();
+	    if (somaData) {
+	      let somaShape = this._buildSoma(options);
+	      this.add( somaShape );
+	    }
 
 	    // this is because the Allen ref is not oriented the same way as WebGL
 	    this.rotateX( Math.PI );
@@ -56977,10 +57007,12 @@
 	        this.add( section );
 	    }
 
-	    // adding the soma as a sphere
+	    // adding the soma, but sometimes, there is no soma data...
 	    let somaData = this._morpho.getSoma();
-	    let somaShape = this._buildSoma(options);
-	    this.add( somaShape );
+	    if (somaData) {
+	      let somaShape = this._buildSoma(options);
+	      this.add( somaShape );
+	    }
 
 	    // this is because the Allen ref is not oriented the same way as WebGL
 	    this.rotateX( Math.PI );
@@ -57470,6 +57502,11 @@
 	     * @param {Object} rawSoma - usually comes from a JSON file
 	     */
 	    initWithRawSection (rawSoma) {
+	      if (!rawSoma) {
+	        console.warn("Cannot init the Soma instance, no soma data provided in raw morphology.");
+	        return
+	      }
+
 	      this._id = rawSoma.id;
 	      this._points = rawSoma.points.map( function(p){return p.position});
 	      this._radius = rawSoma.radius;
@@ -57524,13 +57561,18 @@
 
 	    /**
 	     * Build a morphology from a raw dataset, that usually comes from a JSON file.
-	     *
+	     * Note that some files do not provide any data about the soma. In this case, the Soma
+	     * instance remains `null`
+	     * @param {Object} rawMorphology - a flat tree description of a morphology
 	     */
 	    buildFromRawMorphology (rawMorphology) {
 	      let that = this;
 
-	      this._soma = new Soma();
-	      this._soma.initWithRawSection( rawMorphology.soma );
+	      // Sometimes, we have no data about the soma
+	      if (rawMorphology.soma) {
+	        this._soma = new Soma();
+	        this._soma.initWithRawSection( rawMorphology.soma );
+	      }
 
 	      // Build the Section instances.
 	      // This first step does not define parents nor children
@@ -57760,6 +57802,15 @@
 	    this._threeContext.on("onRaycast", cb);
 	  }
 
+
+	  /**
+	   *
+	   */
+	  takeScreenshot (filename="capture.png") {
+	    let imageData = this._threeContext.getSnapshotData();
+	    Tools.triggerDownload(imageData, filename);
+	  }
+
 	}
 
 	exports.MorphoViewer = MorphoViewer;
@@ -57767,4 +57818,3 @@
 	Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
-//# sourceMappingURL=morphoviewer.js.map
