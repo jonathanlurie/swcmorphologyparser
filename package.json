@@ -41,7 +41,7 @@
         "never"
       ],
       "no-underscore-dangle": [
-        "warn",
+        "off",
         {
           "allowAfterThis": true
         }
