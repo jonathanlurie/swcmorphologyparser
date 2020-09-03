@@ -54661,7 +54661,7 @@
 	   * Constructor
 	   */
 	  constructor () {
-	    this._events = {}; 
+	    this._events = {};
 	  }
 
 
@@ -54725,7 +54725,7 @@
 	    this._meshCollection = {};
 
 	    // init camera
-	    this._camera = new PerspectiveCamera( 27, divObj.clientWidth / divObj.clientHeight, 1, 100000 );
+	    this._camera = new PerspectiveCamera( 27, divObj.clientWidth / divObj.clientHeight, 1, 10000000 );
 	    this._camera.position.z = 1000;
 
 	    // init scene

@@ -81,9 +81,23 @@ class TreeNodeCollection {
       // the first point of the soma has no parent
       if (parentId === -1) { continue }
 
-      const theParentNode = this._nodes[parentId]
-      aNode.setParent(theParentNode)
+      // just setting the parent id because the parent object might be declared later on the list
+      // and thus not exist yet as an object.
+      aNode.setParentId(parentId)
     }
+
+    // setting the parent node object happens in a second pass to ensure all the node are
+    // created before any node association is done.
+    Object.values(this._nodes).forEach((n) => {
+      const parentId = n.getParentId()
+
+      if (parentId === null) {
+        return
+      }
+
+      n.setParent(this._nodes[parentId])
+    })
+
 
     // build the soma if we have some soma points
     if (somaNodes.length) {

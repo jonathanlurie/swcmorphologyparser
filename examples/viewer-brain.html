@@ -1,0 +1,132 @@
+<html>
+<head>
+  <title>Open SWC</title>
+  <style>
+    #inputdiv {
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    body {
+      margin: 0
+    }
+
+    #threedeediv {
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.js"></script>
+  <script src="js/filepuller.min.js"></script>
+  <script src="js/wavefront-obj-parser.js"></script>
+  <script src="../dist/swcmorphologyparser.js"></script>
+
+  <script src="js/morphoviewer.js"></script>
+
+  <div id="threedeediv"></div>
+
+  <!-- The minified version is also accessible -->
+  <!-- <script src="../dist/es6module.umd.min.js"></script> -->
+
+  <div id="inputdiv">
+    Open SWC morphology file file <input type="file" id="fileInput" multiple>
+  </div>
+
+
+
+  <script>
+
+    let fileInput = document.getElementById('fileInput')
+
+    // init the morpho viewer
+    let threedeediv = document.getElementById( 'threedeediv' )
+    let morphoViewer = new morphoviewer.MorphoViewer(threedeediv)
+
+    async function loadBrainMesh(){
+      let meshRes = await fetch('data/997.obj')
+      let meshStr = await meshRes.text()
+      let meshData = ParseWavefrontObj(meshStr)
+      let indices = new Uint32Array(meshData.vertexPositionIndices.filter(v => v>= 0)) // the lib leaves room for 4-vertices faces by adding -1
+      let positions = new Float32Array(meshData.vertexPositions)
+      let geometry = new THREE.BufferGeometry()
+      geometry.setIndex( new THREE.BufferAttribute( indices, 1 ) )
+      geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) )
+      geometry.computeBoundingBox()
+      geometry.computeBoundingSphere()
+      geometry.computeVertexNormals()
+      console.log(geometry)
+
+      let material = new THREE.MeshBasicMaterial({
+        wireframe: true,
+        color: 0x5555ff,
+      })
+
+      let mesh = new THREE.Mesh(geometry, material)
+
+      morphoViewer._threeContext._scene.add(mesh)
+    }
+
+    loadBrainMesh()
+
+    // manages file input
+    fileInput.addEventListener('change', function(e) {
+      let files = e.target.files
+
+      if( !files.length ){
+        return;
+      }
+
+      for(let i=0; i<files.length; i++){
+        filepuller.read( files[i], true, function(error, data){
+          if (error) {
+            console.warn("ERROR" + error)
+            return
+          }
+          readSwcFile(data)
+        })
+      }
+    })
+
+
+    function readSwcFile (data) {
+      let swcParser = new swcmorphologyparser.SwcParser()
+
+      // some benchmarking
+      let t0 = performance.now();
+      swcParser.parse(data)
+      let t1 = performance.now();
+      console.log("Parsing the file took " + (t1 - t0) + " millisecondes.")
+
+      let rawMorpho = swcParser.getRawMorphology()
+      console.log(rawMorpho)
+
+      if (rawMorpho) {
+        // we display a morpho, second param is it's name (null: a autogenarated will do)
+        // last param is "do we focus the camera on it"
+        morphoViewer.addMorphology (
+          rawMorpho,
+          {
+            focusOn: true, // do we want the camera to focus on this one when it's loaded?
+            asPolyline: true, // with polylines of with cylinders?
+            onDone: null, // what to do when it's loaded?
+            //color: Math.floor(Math.random() * 0xFFFFFF), // if not present, all neurones will have there axon in blue, basal dendrite in red and apical dendrite in green
+            somaMode: "fromOrphanSections",
+            //somaMode: "default",
+          }
+        )
+      } else {
+        alert("This file does not contain a valid morphology")
+      }
+    }
+
+
+
+
+  </script>
+
+</body>
+</html>

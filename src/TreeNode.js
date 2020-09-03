@@ -24,6 +24,7 @@ class TreeNode {
     this._radius = r
 
     this._parent = null
+    this._parentId = null
     this._children = []
 
     this._hasSomaChildren = false
@@ -82,6 +83,26 @@ class TreeNode {
    */
   getParent() {
     return this._parent
+  }
+
+
+  /**
+   * Set the id of the parent node.
+   * This is mainly used as a temporary data before the parent object is actually set.
+   * @param {Number} id
+   */
+  setParentId(id) {
+    this._parentId = id
+  }
+
+
+  /**
+   * Get the id of the parent.
+   * This is mainly used as a temporary data before the parent object is actually set.
+   * @return {Number}
+   */
+  getParentId() {
+    return this._parentId
   }
 
   /**
