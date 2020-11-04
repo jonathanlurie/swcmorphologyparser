@@ -3,7 +3,7 @@ import morphologycorejs from 'morphologycorejs';
 /*
  * Defines the SWC standard types as in http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
  */
-const SWC_TYPES = {
+var SWC_TYPES = {
   UNDEFINED: 0,
   SOMA: 1,
   AXON: 2,
@@ -11,10 +11,6 @@ const SWC_TYPES = {
   APICAL_DENDRITE: 4,
   CUSTOM: 5,
 };
-
-var SWC_TYPES$1 = ({
-  SWC_TYPES,
-});
 
 /**
  * A TreeNode instance represent a point from the SWC file. It has a 3D coordinate,
@@ -24,7 +20,7 @@ var SWC_TYPES$1 = ({
  * **Ressources**
  * - [SWC Spec](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html)
  */
-class TreeNode {
+class TreeNode { 
   /**
    * @param {Number} id - the id of the point
    * @param {Number} type - type of structure this point comes from (cf. SWC spec)
@@ -66,7 +62,7 @@ class TreeNode {
    * @return {Boolean} true if this node is a soma, false if not
    */
   isSoma() {
-    return (this._type === SWC_TYPES$1.SOMA)
+    return (this._type === SWC_TYPES.SOMA)
   }
 
   /**
@@ -275,7 +271,8 @@ class TreeNodeCollection {
 
       // The soma nodes: in addition to put them in the regular collection,
       // we also put them in a small collection we keep on the side
-      if (points[i][1] === SWC_TYPES$1.SOMA) {
+      if (points[i][1] === SWC_TYPES.SOMA) {
+        console.log('SOMA POINT', i);
         somaNodes.push(aNode);
       }
 
@@ -385,7 +382,7 @@ class TreeNodeCollection {
       // now nodeList is full of nodes
       const section = {
         typevalue: startingNode.getType(),
-        typename: null, //
+        // typename: null, //
         points,
         id: currentSectionId,
         children: [],
@@ -479,6 +476,7 @@ class SwcParser {
     this._morphology = null;
     this._rawMorphology = null;
     const rawPoints = SwcParser.extractPoints(swcStr);
+    console.log('rawPoints: ', rawPoints);
     const treeNodeCollection = new TreeNodeCollection(rawPoints);
     this._morphology = treeNodeCollection.getMorphology();
     this._rawMorphology = treeNodeCollection.getRawMorphology();

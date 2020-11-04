@@ -1,4 +1,4 @@
-import SWC_TYPES from './Constants'
+import SWC_TYPES from './SWCTypes'
 
 /**
  * A TreeNode instance represent a point from the SWC file. It has a 3D coordinate,
@@ -8,7 +8,7 @@ import SWC_TYPES from './Constants'
  * **Ressources**
  * - [SWC Spec](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html)
  */
-class TreeNode {
+class TreeNode { 
   /**
    * @param {Number} id - the id of the point
    * @param {Number} type - type of structure this point comes from (cf. SWC spec)

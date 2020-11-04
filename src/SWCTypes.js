@@ -1,7 +1,7 @@
 /*
  * Defines the SWC standard types as in http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html
  */
-const SWC_TYPES = {
+export default {
   UNDEFINED: 0,
   SOMA: 1,
   AXON: 2,
@@ -9,7 +9,3 @@ const SWC_TYPES = {
   APICAL_DENDRITE: 4,
   CUSTOM: 5,
 }
-
-export default ({
-  SWC_TYPES,
-})
