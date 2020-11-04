@@ -26,7 +26,6 @@ class SwcParser {
     this._morphology = null
     this._rawMorphology = null
     const rawPoints = SwcParser.extractPoints(swcStr)
-    console.log('rawPoints: ', rawPoints)
     const treeNodeCollection = new TreeNodeCollection(rawPoints)
     this._morphology = treeNodeCollection.getMorphology()
     this._rawMorphology = treeNodeCollection.getRawMorphology()

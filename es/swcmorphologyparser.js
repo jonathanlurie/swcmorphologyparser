@@ -272,7 +272,6 @@ class TreeNodeCollection {
       // The soma nodes: in addition to put them in the regular collection,
       // we also put them in a small collection we keep on the side
       if (points[i][1] === SWC_TYPES.SOMA) {
-        console.log('SOMA POINT', i);
         somaNodes.push(aNode);
       }
 
@@ -382,7 +381,6 @@ class TreeNodeCollection {
       // now nodeList is full of nodes
       const section = {
         typevalue: startingNode.getType(),
-        // typename: null, //
         points,
         id: currentSectionId,
         children: [],
@@ -476,7 +474,6 @@ class SwcParser {
     this._morphology = null;
     this._rawMorphology = null;
     const rawPoints = SwcParser.extractPoints(swcStr);
-    console.log('rawPoints: ', rawPoints);
     const treeNodeCollection = new TreeNodeCollection(rawPoints);
     this._morphology = treeNodeCollection.getMorphology();
     this._rawMorphology = treeNodeCollection.getRawMorphology();
