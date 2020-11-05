@@ -642,8 +642,6 @@
       this._parent = null;
       this._parentId = null;
       this._children = [];
-
-      this._hasSomaChildren = false;
     }
 
     /**
@@ -721,6 +719,7 @@
       return this._parentId
     }
 
+
     /**
      * @private
      * Add a child to _this_ node
@@ -729,10 +728,9 @@
     _addChild(cNode) {
       if (!this.doesAlreadyHaveChild(cNode)) {
         this._children.push(cNode);
-
-        this._hasSomaChildren = cNode.isSoma() || this._hasSomaChildren;
       }
     }
+
 
     /**
      * Get all the chidren
@@ -747,19 +745,9 @@
      * @return {Array} array of TreeNode instances
      */
     getNonSomaChildren() {
-      if (!this._hasSomaChildren) {
-        return this._children
-      }
-
-      const nonSomaChildren = [];
-
-      for (let i = 0; i < this._children.length; i += 0) {
-        if (!this._children[i].isSoma()) {
-          nonSomaChildren.push(this._children[i]);
-        }
-      }
-      return nonSomaChildren
+      return this._children.filter(c => !c.isSoma())
     }
+
 
     /**
      * Check is _this_ node already has the given child amond its list of children
@@ -891,6 +879,7 @@
         aNode.setParentId(parentId);
       }
 
+      
       // setting the parent node object happens in a second pass to ensure all the node are
       // created before any node association is done.
       Object.values(this._nodes).forEach((n) => {
@@ -902,7 +891,6 @@
 
         n.setParent(this._nodes[parentId]);
       });
-
 
       // build the soma if we have some soma points
       if (somaNodes.length) {

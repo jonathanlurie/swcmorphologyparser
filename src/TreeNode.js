@@ -26,8 +26,6 @@ class TreeNode {
     this._parent = null
     this._parentId = null
     this._children = []
-
-    this._hasSomaChildren = false
   }
 
   /**
@@ -105,6 +103,7 @@ class TreeNode {
     return this._parentId
   }
 
+
   /**
    * @private
    * Add a child to _this_ node
@@ -113,10 +112,9 @@ class TreeNode {
   _addChild(cNode) {
     if (!this.doesAlreadyHaveChild(cNode)) {
       this._children.push(cNode)
-
-      this._hasSomaChildren = cNode.isSoma() || this._hasSomaChildren
     }
   }
+
 
   /**
    * Get all the chidren
@@ -131,19 +129,9 @@ class TreeNode {
    * @return {Array} array of TreeNode instances
    */
   getNonSomaChildren() {
-    if (!this._hasSomaChildren) {
-      return this._children
-    }
-
-    const nonSomaChildren = []
-
-    for (let i = 0; i < this._children.length; i += 0) {
-      if (!this._children[i].isSoma()) {
-        nonSomaChildren.push(this._children[i])
-      }
-    }
-    return nonSomaChildren
+    return this._children.filter(c => !c.isSoma())
   }
+
 
   /**
    * Check is _this_ node already has the given child amond its list of children

@@ -86,6 +86,7 @@ class TreeNodeCollection {
       aNode.setParentId(parentId)
     }
 
+    
     // setting the parent node object happens in a second pass to ensure all the node are
     // created before any node association is done.
     Object.values(this._nodes).forEach((n) => {
@@ -97,7 +98,6 @@ class TreeNodeCollection {
 
       n.setParent(this._nodes[parentId])
     })
-
 
     // build the soma if we have some soma points
     if (somaNodes.length) {
