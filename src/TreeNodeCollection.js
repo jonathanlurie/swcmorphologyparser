@@ -120,35 +120,17 @@ class TreeNodeCollection {
     let currentSectionId = 0
     const sections = []
 
-    // find the first node that has non-soma children:
-    let firstValidNode = null
-    let firstValidChildren = []
-
-    const allNodeIds = Object.keys(this._nodes)
-    for (let i = 0; i < allNodeIds.length; i += 1) {
-      const nodeId = allNodeIds[i]
-      const childrenOfNode = this._nodes[nodeId].getNonSomaChildren()
-      if (childrenOfNode.length > 0) {
-        firstValidNode = this._nodes[nodeId]
-        firstValidChildren = childrenOfNode
-        break
-      }
-    }
-
-    if (!firstValidNode) {
-      console.warn('No valid section here')
-      return
-    }
-
+    // adding all the the orphan nodes as starting points of sections
+    // (there should be only one, but we know things can go wrong)
+    const starterNodes = Object.values(this._nodes).filter(n => n.getParent() === null)
     const stack = []
 
-    // add all the children of the firstValidNode into the stack
-    for (let i = 0; i < firstValidChildren.length; i += 1) {
+    starterNodes.forEach((n) => {
       stack.push({
-        node: firstValidChildren[i],
+        node: n,
         parentSectionId: null,
       })
-    }
+    })
 
     function buildRawSection(startingNode, parentSectionId) {
       // the nodeList is the list of node for the section we are building.
@@ -160,9 +142,6 @@ class TreeNodeCollection {
       if (startingNode.getParent()) {
         nodeList.push(startingNode.getParent())
       }
-
-      // nodeList.push(startingNode)
-      // let nextNodes = startingNode.getNonSomaChildren()[0].dive(nodeList)
 
       const nextNodes = startingNode.dive(nodeList)
 
@@ -187,8 +166,8 @@ class TreeNodeCollection {
       }
 
       // adding this section as a child of its parent
-      // (this is made possible because the parents are always defined before their children)
-      if (parentSectionId) {
+      // (this is made possible because the parents are always defined before their children) <-- UPDATE: not true
+      if (parentSectionId !== null) {
         sections[parentSectionId].children.push(currentSectionId)
       }
 

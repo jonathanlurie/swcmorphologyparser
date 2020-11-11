@@ -147,8 +147,10 @@ class TreeNode {
 
   /**
    * Dive into the TreeNode connection by following the children. Builds a list
-   * all along. Stops when a node has no more children (end of branch) or when a
-   * node has two children or more because it means it's a forking point.
+   * all along. Stops when:
+   * - a node has no more children (end of branch)
+   * - a node has two children or more (forking point)
+   * - a point is of another type as the starting one (eg. dendrite becomes axon)
    * What is returned in the end is an array that can be empty (if end of branch)
    * or with two or more TreeNode instance being the forking direction
    * @param {Array} nodeList - contains the previous TreeNode (parent, grand parents, etc.)
@@ -159,23 +161,14 @@ class TreeNode {
     // adding the current node on the list
     nodeList.push(this)
 
-    const children = this.getNonSomaChildren()
+    const children = this.getChildren()
 
     // this current node is in the middle of a sections, we go on...
-    if (children.length === 1) {
-      if (children[0].getType() === this._type) {
-        return children[0].dive(nodeList)
-      }
-      console.warn(`Non-soma node (id:${this._id} type:${this._type}) has a single child of different type (id:${children[0].getId()} type:${this.getType()})`)
-
-
-    // this is or a ending point (no children) or a forking point (2 children or more).
-    // In both case, this the end of a sections
-    } else {
-      return children
+    if (children.length === 1 && children[0].getType() === this._type) {
+      return children[0].dive(nodeList)
     }
 
-    return []
+    return children
   }
 }
 
