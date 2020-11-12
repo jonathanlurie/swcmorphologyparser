@@ -20,7 +20,7 @@ var SWC_TYPES = {
  * **Ressources**
  * - [SWC Spec](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html)
  */
-class TreeNode { 
+class TreeNode {
   /**
    * @param {Number} id - the id of the point
    * @param {Number} type - type of structure this point comes from (cf. SWC spec)
@@ -261,14 +261,16 @@ class TreeNodeCollection {
       const parentId = points[i][6];
 
       // the first point of the soma has no parent
-      if (parentId === -1) { continue }
+      if (parentId === -1) {
+        // eslint-disable-next-line no-continue
+        continue
+      }
 
       // just setting the parent id because the parent object might be declared later on the list
       // and thus not exist yet as an object.
       aNode.setParentId(parentId);
     }
 
-    
     // setting the parent node object happens in a second pass to ensure all the node are
     // created before any node association is done.
     Object.values(this._nodes).forEach((n) => {
@@ -348,7 +350,6 @@ class TreeNodeCollection {
       };
 
       // adding this section as a child of its parent
-      // (this is made possible because the parents are always defined before their children) <-- UPDATE: not true
       if (parentSectionId !== null) {
         sections[parentSectionId].children.push(currentSectionId);
       }
@@ -435,20 +436,15 @@ class SwcParser {
     this._rawMorphology = null;
     const rawPoints = SwcParser.extractPoints(swcStr);
     const treeNodeCollection = new TreeNodeCollection(rawPoints);
-    
     this._morphology = treeNodeCollection.getMorphology();
     this._rawMorphology = treeNodeCollection.getRawMorphology();
-    console.log('treeNodeCollection: ', treeNodeCollection);
     const type2Nodes = Object.values(treeNodeCollection._nodes).filter(n => n._type === 2);
     let aType2Node = type2Nodes[0];
     while (aType2Node._parent) {
-      console.log(aType2Node);
       aType2Node = aType2Node._parent;
     }
-    console.log(aType2Node);
-
-
   }
+
 
   /**
    * Get the raw morphology flat tree
@@ -510,7 +506,6 @@ class SwcParser {
         ];
       }
     }
-
     return swcPoints
   }
 }

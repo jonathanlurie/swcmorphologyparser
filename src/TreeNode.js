@@ -8,7 +8,7 @@ import SWC_TYPES from './SWCTypes'
  * **Ressources**
  * - [SWC Spec](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html)
  */
-class TreeNode { 
+class TreeNode {
   /**
    * @param {Number} id - the id of the point
    * @param {Number} type - type of structure this point comes from (cf. SWC spec)

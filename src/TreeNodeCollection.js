@@ -79,14 +79,16 @@ class TreeNodeCollection {
       const parentId = points[i][6]
 
       // the first point of the soma has no parent
-      if (parentId === -1) { continue }
+      if (parentId === -1) {
+        // eslint-disable-next-line no-continue
+        continue
+      }
 
       // just setting the parent id because the parent object might be declared later on the list
       // and thus not exist yet as an object.
       aNode.setParentId(parentId)
     }
 
-    
     // setting the parent node object happens in a second pass to ensure all the node are
     // created before any node association is done.
     Object.values(this._nodes).forEach((n) => {
@@ -166,7 +168,6 @@ class TreeNodeCollection {
       }
 
       // adding this section as a child of its parent
-      // (this is made possible because the parents are always defined before their children) <-- UPDATE: not true
       if (parentSectionId !== null) {
         sections[parentSectionId].children.push(currentSectionId)
       }

@@ -71,8 +71,12 @@
       console.log("Parsing the file took " + (t1 - t0) + " millisecondes.")
 
       let rawMorpho = swcParser.getRawMorphology()
-      console.log('swcParser.getRawMorphology()', swcParser.getRawMorphology())
-      console.log('swcParser.getMorphology()', swcParser.getMorphology())
+      let morpho = swcParser.getMorphology()
+      console.log('swcParser.getRawMorphology()', rawMorpho)
+      console.log('swcParser.getMorphology()', morpho)
+
+      const neuriteStarts = morpho.getNeuriteStarts()
+      console.log('neuriteStarts: ', neuriteStarts)
 
       if (rawMorpho) {
         // we display a morpho, second param is it's name (null: a autogenarated will do)

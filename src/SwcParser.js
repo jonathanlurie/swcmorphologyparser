@@ -27,20 +27,15 @@ class SwcParser {
     this._rawMorphology = null
     const rawPoints = SwcParser.extractPoints(swcStr)
     const treeNodeCollection = new TreeNodeCollection(rawPoints)
-    
     this._morphology = treeNodeCollection.getMorphology()
     this._rawMorphology = treeNodeCollection.getRawMorphology()
-    console.log('treeNodeCollection: ', treeNodeCollection)
     const type2Nodes = Object.values(treeNodeCollection._nodes).filter(n => n._type === 2)
     let aType2Node = type2Nodes[0]
     while (aType2Node._parent) {
-      console.log(aType2Node)
       aType2Node = aType2Node._parent
     }
-    console.log(aType2Node)
-
-
   }
+
 
   /**
    * Get the raw morphology flat tree
@@ -102,7 +97,6 @@ class SwcParser {
         ]
       }
     }
-
     return swcPoints
   }
 }

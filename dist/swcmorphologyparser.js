@@ -29,7 +29,7 @@
     5: 'custom',
   };
 
-  const TYPENAME_2_TYPEVALUE = {
+  const SECTION_TYPECODES = {
     undefined: 0,
     soma: 1,
     axon: 2,
@@ -99,11 +99,11 @@
      * @param {String} tn - the typename
      */
     setTypename(tn) {
-      if (tn in TYPENAME_2_TYPEVALUE) {
+      if (tn in SECTION_TYPECODES) {
         this._typename = tn;
-        this._typevalue = TYPENAME_2_TYPEVALUE[tn];
+        this._typevalue = SECTION_TYPECODES[tn];
       } else {
-        console.warn(`The typename must be one of ${Object.key(TYPENAME_2_TYPEVALUE).join(' ')}`);
+        console.warn(`The typename must be one of ${Object.key(SECTION_TYPECODES).join(' ')}`);
       }
     }
 
@@ -142,6 +142,9 @@
       return this._typevalue
     }
 
+    getTypeValue() {
+      return this._typevalue
+    }
 
     /**
      * Add a point to _this_ current section
@@ -187,7 +190,7 @@
       // in some cases, we have only the typename or the typevalue, in this case we perform  a lookup
       if (rawSection.typename || rawSection.typevalue) {
         this._typename = rawSection.typename || TYPEVALUE_2_TYPENAME[rawSection.typevalue];
-        this._typevalue = rawSection.typevalue || TYPENAME_2_TYPEVALUE[rawSection.typename];
+        this._typevalue = rawSection.typevalue || SECTION_TYPECODES[rawSection.typename];
       }
 
       return this._id
@@ -559,6 +562,8 @@
      * @return {Array} array of Sections
      */
     getOrphanSections(force = false) {
+      console.error('This method is deprecated. In order to get neurite starting point, use `.getNeuriteStarts()` instead.');
+
       const speciality = 'orphans';
 
       // extract, if not done before
@@ -597,6 +602,39 @@
       }
       return this._specialSections[specialityName]
     }
+
+
+    /**
+     * Find the points that are starting the neurites, juste after the soma.
+     * Those point can be used to create a polygon that would represent the soma
+     * @return {Array} of points, where each point is an Array [x, y, z]
+     */
+    getNeuriteStarts() {
+      // get the soma section
+      const allSections = Object.values(this._sections);
+      const somaSections = allSections.filter(s => s.getTypeValue() === SECTION_TYPECODES.soma);
+
+      if (somaSections.length === 0) {
+        return null
+      }
+      
+      // find the first point of each child non-soma section of a soma section
+      const points = [];
+      somaSections.forEach((s) => {
+        s.getChildren()
+          .filter(cs => cs.getTypeValue() !== SECTION_TYPECODES.soma) // cs = child section
+          .forEach((cs) => {
+            const csPoints = cs.getPoints();
+            // since this section has a parent (a soma section), then the first point of 
+            // the child section is taken from the parent and is not realy the start of the child section.
+            // This is why we take point 1 and not point 0
+            if (csPoints.length > 1) {
+              points.push(csPoints[1]);
+            }
+          });
+      });
+      return points
+    }
   }
 
   var index = ({
@@ -624,7 +662,7 @@
    * **Ressources**
    * - [SWC Spec](http://www.neuronland.org/NLMorphologyConverter/MorphologyFormats/SWC/Spec.html)
    */
-  class TreeNode { 
+  class TreeNode {
     /**
      * @param {Number} id - the id of the point
      * @param {Number} type - type of structure this point comes from (cf. SWC spec)
@@ -865,14 +903,16 @@
         const parentId = points[i][6];
 
         // the first point of the soma has no parent
-        if (parentId === -1) { continue }
+        if (parentId === -1) {
+          // eslint-disable-next-line no-continue
+          continue
+        }
 
         // just setting the parent id because the parent object might be declared later on the list
         // and thus not exist yet as an object.
         aNode.setParentId(parentId);
       }
 
-      
       // setting the parent node object happens in a second pass to ensure all the node are
       // created before any node association is done.
       Object.values(this._nodes).forEach((n) => {
@@ -952,7 +992,6 @@
         };
 
         // adding this section as a child of its parent
-        // (this is made possible because the parents are always defined before their children) <-- UPDATE: not true
         if (parentSectionId !== null) {
           sections[parentSectionId].children.push(currentSectionId);
         }
@@ -1039,20 +1078,15 @@
       this._rawMorphology = null;
       const rawPoints = SwcParser.extractPoints(swcStr);
       const treeNodeCollection = new TreeNodeCollection(rawPoints);
-      
       this._morphology = treeNodeCollection.getMorphology();
       this._rawMorphology = treeNodeCollection.getRawMorphology();
-      console.log('treeNodeCollection: ', treeNodeCollection);
       const type2Nodes = Object.values(treeNodeCollection._nodes).filter(n => n._type === 2);
       let aType2Node = type2Nodes[0];
       while (aType2Node._parent) {
-        console.log(aType2Node);
         aType2Node = aType2Node._parent;
       }
-      console.log(aType2Node);
-
-
     }
+
 
     /**
      * Get the raw morphology flat tree
@@ -1114,7 +1148,6 @@
           ];
         }
       }
-
       return swcPoints
     }
   }
