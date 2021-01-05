@@ -77,6 +77,7 @@
 
       const neuriteStarts = morpho.getNeuriteStarts()
       console.log('neuriteStarts: ', neuriteStarts)
+      console.log('morphoViewer', morphoViewer)
 
       if (rawMorpho) {
         // we display a morpho, second param is it's name (null: a autogenarated will do)
@@ -85,7 +86,8 @@
           rawMorpho,
           {
             focusOn: true, // do we want the camera to focus on this one when it's loaded?
-            asPolyline: true, // with polylines of with cylinders?
+            formFactor: 'hybrid',
+            // asPolyline: false, // with polylines of with cylinders?
             onDone: null, // what to do when it's loaded?
             //color: Math.floor(Math.random() * 0xFFFFFF), // if not present, all neurones will have there axon in blue, basal dendrite in red and apical dendrite in green
             somaMode: "fromOrphanSections",

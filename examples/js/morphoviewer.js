@@ -448,6 +448,7 @@
       this._id = null;
       this._sections = {};
       this._soma = null;
+      this._radiusFromSoma = null;
 
       // these are catgories of sections that we may need. Look at `getOrphanSections`
       // and `_findSpecialSection`
@@ -562,6 +563,8 @@
      * @return {Array} array of Sections
      */
     getOrphanSections(force = false) {
+      console.error('This method is deprecated. In order to get neurite starting point, use `.getNeuriteStarts()` instead.');
+
       const speciality = 'orphans';
 
       // extract, if not done before
@@ -629,16 +632,46 @@
             if (csPoints.length > 1) {
               points.push(csPoints[1]);
             }
-            
           });
       });
       return points
+    }
+
+
+    /**
+     * Get the distance between the soma and the furthest point from the soma.
+     * This can be useful to compute a bounding sphere centered on the soma
+     * @return {number} the distance
+     */
+    getRadiusFromSoma() {
+      if (this._radiusFromSoma !== null) {
+        return this._radiusFromSoma
+      }
+
+      const c = this._soma.getCenter();
+      let maxDistance = 0;
+      const allSections = Object.values(this._sections);
+
+      for (let i = 0; i< allSections.length; i += 1) {
+        const sectionPoints = allSections[i].getPoints();
+        for (let j = 0; j < sectionPoints.length; j+= 1) {
+          const p = sectionPoints[j];
+          const d = Math.sqrt((p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2);
+          if (d > maxDistance) {
+            maxDistance = d;
+          }
+        }
+      }
+
+      this._radiusFromSoma = maxDistance;
+      return maxDistance
     }
   }
 
   var index = ({
     Morphology,
   });
+  //# sourceMappingURL=morphologycorejs.js.map
 
   // Polyfills
 
@@ -56791,9 +56824,10 @@
 
       // case when soma is a single point
       if (somaPoints.length === 1) {
+        console.log('single point soma');
         const somaSphere = new Mesh(
           new SphereGeometry(soma.getRadius(), 32, 32),
-          new MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }),
+          new MeshPhongMaterial({ color: 0x555555, transparent: false, opacity: 1 }),
         );
 
         somaSphere.position.set(somaPoints[0][0], somaPoints[0][1], somaPoints[0][2]);
@@ -56801,6 +56835,7 @@
 
       // this is a 3-point soma, probably colinear
       } if (somaPoints.length === 3) {
+        console.log('3 points soma');
         /*
         let radius = soma.getRadius()
         let mat = new THREE.MeshPhongMaterial( {color: 0x000000, transparent: true, opacity:0.3} )
@@ -56831,7 +56866,7 @@
 
         const somaSphere = new Mesh(
           new SphereGeometry(soma.getRadius(), 32, 32),
-          new MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }),
+          new MeshPhongMaterial({ color: 0x555555, transparent: false, opacity: 1 }),
         );
 
         somaSphere.position.set(somaPoints[0][0], somaPoints[0][1], somaPoints[0][2]);
@@ -56840,6 +56875,7 @@
 
       // when soma is multiple points
       } if (somaPoints.length > 1) {
+        console.log('many point soma');
         // compute the average of the points
         const center = soma.getCenter();
         const centerV = new Vector3(center[0], center[1], center[2]);
@@ -56859,9 +56895,9 @@
         }
 
         const somaMesh = new Mesh(geometry, new MeshBasicMaterial({
-          color: 0x000000,
-          transparent: true,
-          opacity: 0.3,
+          color: 0x555555,
+          transparent: false,
+          opacity: 1,
           side: DoubleSide,
         }));
         return somaMesh
@@ -56882,13 +56918,6 @@
       let somaMesh = null;
 
       try {
-        // getting all the 1st points of orphan sections
-        // const somaPolygonPoints = this._morpho.getOrphanSections().map((s) => {
-        //   const allPoints = s.getPoints()
-        //   const firstOne = allPoints[1]
-        //   return new THREE.Vector3(...firstOne)
-        // })
-
         const somaPolygonPoints = this._morpho.getNeuriteStarts().map(p => new Vector3(...p));
 
         // adding the points of the soma (adds values mostly if we a soma polygon)
@@ -57445,10 +57474,20 @@
      * @return {THREE.Line} the constructed polyline
      */
     _buildSection(section) {
+      console.log('section.getTypename()', section.getTypename());
+      // if (section.getTypename() === 'soma') {
+      //   console.log('soma section!')
+      //   return null
+      // }
+
       const material = this._sectionTubeMaterials[section.getTypename()];
       const sectionPoints = section.getPoints();
       const sectionRadius = section.getRadiuses();
-      const startIndex = section.getParent() ? 0 : 1;
+      const parentSection = section.getParent();
+      // Since the first point is the last point from previous section,
+      // if the previous section is a soma, then we don't want the section
+      // to start with the same radius as the soma, so we just skip the point
+      const startIndex = parentSection && parentSection.getTypename() === 'soma' ? 1 : 0;
 
       if ((sectionPoints.length - startIndex) < 2) return null
 
@@ -57705,12 +57744,10 @@
     constructor(morpho, options = {}) {
       super();
 
-      this._tubularSections = new Object3D();
       this._smoothSections = new Object3D();
       this._polylineSections = new Object3D();
       this._somaMesh = null;
 
-      this.add(this._tubularSections);
       this.add(this._polylineSections);
       this.add(this._smoothSections);
 
@@ -57738,17 +57775,6 @@
 
       console.log('sections', sections);
 
-      console.time('tubular');
-      // creating a tubular mesh for each section
-      // for (let i = 0; i < sections.length; i += 1) {
-      //   const sectionTubular = this._buildTubularSection(sections[i])
-      //   if (sectionTubular) {
-      //     this._tubularSections.add(sectionTubular)
-      //   }
-      // }
-      console.timeEnd('tubular');
-
-      console.time('smooth');
       // creating a tubular mesh for each section
       for (let i = 0; i < sections.length; i += 1) {
         const sectionSmooth = this._buildWormSection(sections[i]);
@@ -57756,10 +57782,7 @@
           this._smoothSections.add(sectionSmooth);
         }
       }
-      console.timeEnd('smooth');
 
-
-      console.time('polyline');
       // creating a polyline for each section
       for (let i = 0; i < sections.length; i += 1) {
         const sectionPolyline = this._buildLineSection(sections[i]);
@@ -57767,7 +57790,6 @@
           this._polylineSections.add(sectionPolyline);
         }
       }
-      console.timeEnd('polyline');
 
       // adding the soma, but sometimes, there is no soma data...
       const somaData = this._morpho.getSoma();
@@ -57794,83 +57816,47 @@
     _buildSomaDefault() {
       const soma = this._morpho.getSoma();
       const somaPoints = soma.getPoints();
+      const somaMaterial = new MeshPhongMaterial({ color: 0x000000, transparent: false, opacity: 1 });
+
+      console.log('Soma points:', somaPoints.length);
 
       // case when soma is a single point
-      if (somaPoints.length === 1) {
+      if (somaPoints.length === 1 || somaPoints.length === 3) {
         const somaSphere = new Mesh(
           new SphereGeometry(soma.getRadius(), 32, 32),
-          new MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }),
+          somaMaterial,
         );
 
         somaSphere.position.set(somaPoints[0][0], somaPoints[0][1], somaPoints[0][2]);
         return somaSphere
 
       // this is a 3-point soma, probably colinear
-      } if (somaPoints.length === 3) {
-        /*
-        let radius = soma.getRadius()
-        let mat = new THREE.MeshPhongMaterial( {color: 0x000000, transparent: true, opacity:0.3} )
-
-        let c1 = Tools.makeCylinder(
-          new THREE.Vector3(...somaPoints[0]),
-          new THREE.Vector3(...somaPoints[1]),
-          radius,
-          radius,
-          false,
-          mat
-        )
-
-        let c2 = Tools.makeCylinder(
-          new THREE.Vector3(...somaPoints[1]),
-          new THREE.Vector3(...somaPoints[2]),
-          radius,
-          radius,
-          false,
-          mat
-        )
-
-        let somaCyl = new THREE.Object3D()
-        somaCyl.add(c1)
-        somaCyl.add(c2)
-        return somaCyl
-        */
-
-        const somaSphere = new Mesh(
-          new SphereGeometry(soma.getRadius(), 32, 32),
-          new MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.3 }),
-        );
-
-        somaSphere.position.set(somaPoints[0][0], somaPoints[0][1], somaPoints[0][2]);
-        return somaSphere
+      }
 
 
-      // when soma is multiple points
-      } if (somaPoints.length > 1) {
-        // compute the average of the points
-        const center = soma.getCenter();
-        const centerV = new Vector3(center[0], center[1], center[2]);
-        const geometry = new Geometry();
+      // if more than three soma points, we display all the spheres
+      if (somaPoints.length > 1) {
+        const somaSphereContainer = new Object3D();
+        somaSphereContainer.name = 'somaSphereContainer';
 
-        for (let i = 0; i < somaPoints.length; i += 1) {
-          geometry.vertices.push(
-            new Vector3(somaPoints[i][0], somaPoints[i][1], somaPoints[i][2]),
-            new Vector3(
-              somaPoints[(i + 1) % somaPoints.length][0],
-              somaPoints[(i + 1) % somaPoints.length][1],
-              somaPoints[(i + 1) % somaPoints.length][2],
-            ),
-            centerV,
-          );
-          geometry.faces.push(new Face3(3 * i, 3 * i + 1, 3 * i + 2));
-        }
+        this._morpho.getArrayOfSections()
+          .filter(s => s.getTypename() === 'soma')
+          .forEach((s) => {
+            const points = s.getPoints();
+            const radiuses = s.getRadiuses();
 
-        const somaMesh = new Mesh(geometry, new MeshBasicMaterial({
-          color: 0x000000,
-          transparent: true,
-          opacity: 0.3,
-          side: DoubleSide,
-        }));
-        return somaMesh
+            // building a sphere for each soma point
+            points.forEach((p, i) => {
+              const somaSphere = new Mesh(
+                new SphereGeometry(radiuses[i], 32, 32),
+                somaMaterial,
+              );
+              somaSphere.position.set(p[0], p[1], p[2]);
+              somaSphereContainer.add(somaSphere);
+            });
+          });
+
+        return somaSphereContainer
       }
       console.warn('No soma defined');
       return null
@@ -58021,12 +58007,33 @@
 
 
     _buildWormSection(section) {
+      // somas are not rendered as sections
+      if (section.getTypename() === 'soma') {
+        return null
+      }
+
       const material = this._sectionTubeMaterials[section.getTypename()];
-      const sectionPoints = section.getPoints();
-      const sectionRadius = section.getRadiuses();
+      let sectionPoints = section.getPoints();
+      let sectionRadius = section.getRadiuses();
       const startIndex = section.getParent() ? 0 : 1;
 
+      // if (section.getTypename() === 'axon') {
+      //   console.log('axon')
+      // }
+
+      // const parentSection = section.getParent()
+      // Since the first point is the last point from previous section,
+      // if the previous section is a soma, then we don't want the section
+      // to start with the same radius as the soma, so we just skip the point
+      // const startIndex = parentSection && parentSection.getTypename() === 'soma' ? 1 : 0
+
       if ((sectionPoints.length - startIndex) < 2) return null
+
+      // if the parent is of type soma, then we do not use the first point
+      // if (startIndex === 1) {
+      //   sectionPoints = sectionPoints.slice(1)
+      //   sectionRadius = sectionRadius.slice(1)
+      // }
 
       const positions = sectionPoints.map(arr => new Vector3(arr[0], arr[1], arr[2]));
 
@@ -58083,13 +58090,6 @@
     }
 
 
-    setTubularOpacity(a) {
-      this._tubularSections.children.forEach((mesh) => {
-        mesh.material.opacity = a;
-      });
-    }
-
-
     setSmoothOpacity(a) {
       this._smoothSections.children.forEach((mesh) => {
         mesh.material.opacity = a;
@@ -58102,28 +58102,17 @@
     }
 
 
-    setTubularVisibility(v) {
-      this._tubularSections.visible = v;
-    }
-
-
     setPolylineVisibility(v) {
       this._polylineSections.visible = v;
     }
 
 
     enableMode(mode) {
-      if (mode === 'tubular') {
-        this._smoothSections.visible = false;
-        this._tubularSections.visible = true;
-        this._polylineSections.visible = false;
-      } else if (mode === 'smooth') {
+      if (mode === 'smooth' || mode === 'tubular') {
         this._smoothSections.visible = true;
-        this._tubularSections.visible = false;
         this._polylineSections.visible = false;
       } else if (mode === 'polyline' || mode === 'line') {
         this._smoothSections.visible = false;
-        this._tubularSections.visible = false;
         this._polylineSections.visible = true;
       } 
     }
@@ -58175,7 +58164,7 @@
       }
 
       morphology.setId(options.name);
-      const asPolyline = options.asPolyline ? options.asPolyline : true;
+      const asPolyline = 'asPolyline' in options ? options.asPolyline : true;
 
       let morphoMesh = null;
 

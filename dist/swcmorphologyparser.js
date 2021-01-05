@@ -448,6 +448,7 @@
       this._id = null;
       this._sections = {};
       this._soma = null;
+      this._radiusFromSoma = null;
 
       // these are catgories of sections that we may need. Look at `getOrphanSections`
       // and `_findSpecialSection`
@@ -634,6 +635,36 @@
           });
       });
       return points
+    }
+
+
+    /**
+     * Get the distance between the soma and the furthest point from the soma.
+     * This can be useful to compute a bounding sphere centered on the soma
+     * @return {number} the distance
+     */
+    getRadiusFromSoma() {
+      if (this._radiusFromSoma !== null) {
+        return this._radiusFromSoma
+      }
+
+      const c = this._soma.getCenter();
+      let maxDistance = 0;
+      const allSections = Object.values(this._sections);
+
+      for (let i = 0; i< allSections.length; i += 1) {
+        const sectionPoints = allSections[i].getPoints();
+        for (let j = 0; j < sectionPoints.length; j+= 1) {
+          const p = sectionPoints[j];
+          const d = Math.sqrt((p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2);
+          if (d > maxDistance) {
+            maxDistance = d;
+          }
+        }
+      }
+
+      this._radiusFromSoma = maxDistance;
+      return maxDistance
     }
   }
 
@@ -978,9 +1009,9 @@
 
         // if the first point is a soma point, we dont keep the first radius
         // because it's the radius of the soma
-        if (parentSectionId === null && points.length) {
-          points[0].radius = 0;
-        }
+        // if (parentSectionId === null && points.length) {
+        //   points[0].radius = 0
+        // }
 
         // now nodeList is full of nodes
         const section = {
